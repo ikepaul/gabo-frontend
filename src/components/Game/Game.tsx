@@ -4,6 +4,7 @@ import PlayerHand from "./PlayerHand";
 import { Socket, io } from "socket.io-client";
 import { GameCard, GameClass, Player } from "./GameClass";
 import Card from "../Card/Card";
+import CardOutline from "../Card/CardOutline";
 
 export default function Game() {
   const [socket, setSocket] = useState<Socket>();
@@ -59,6 +60,14 @@ export default function Game() {
       }
     );
 
+    socket?.on("update-topcard", (topCard: CardClass) => {
+      setGame((oldGame) => {
+        if (oldGame) {
+          return { ...oldGame, topCard };
+        }
+      });
+    });
+
     socket?.on("end-turn", (activePlayerId: string) => {
       setGame((oldGame) => {
         if (oldGame) {
@@ -76,17 +85,23 @@ export default function Game() {
 
   const handleTopCardClick = () => {
     if (game && game.activePlayerId === socket?.id) {
-      socket.emit(
-        "draw-from-pile",
-        (pickedUpCard: CardClass, newTopCard: CardClass) => {
-          setDrawnCard(pickedUpCard);
-          setGame((oldGame) => {
-            if (oldGame) {
-              return { ...oldGame, topCard: newTopCard };
-            }
-          });
-        }
-      );
+      if (drawnCard) {
+        socket.emit("put-on-pile", () => {
+          setDrawnCard(undefined);
+        });
+      } else {
+        socket.emit(
+          "draw-from-pile",
+          (pickedUpCard: CardClass, newTopCard: CardClass) => {
+            setDrawnCard(pickedUpCard);
+            setGame((oldGame) => {
+              if (oldGame) {
+                return { ...oldGame, topCard: newTopCard };
+              }
+            });
+          }
+        );
+      }
     }
   };
 
@@ -130,10 +145,15 @@ export default function Game() {
           card={drawnCard}
         />
       )}
-      {game?.topCard && (
+      {game?.topCard ? (
         <Card
           style={{ position: "absolute", top: "50vh", left: "50vw" }}
           card={game.topCard}
+          onClick={handleTopCardClick}
+        />
+      ) : (
+        <CardOutline
+          style={{ position: "absolute", top: "50vh", left: "50vw" }}
           onClick={handleTopCardClick}
         />
       )}
