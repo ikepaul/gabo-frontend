@@ -1,16 +1,9 @@
-import Card from "./components/Card/Card.tsx";
-import CardClass from "./components/Card/CardClass.ts";
+import Game from "./components/Game/Game";
 
 function App() {
   return (
     <div>
-      <Card card={CardClass.Joker()} />
-      <Card card={new CardClass("Spades", "Ace")} />
-      <Card card={new CardClass("Hearts", "King")} />
-
-      <Card card={CardClass.Joker()} />
-      <br />
-      <Card card={new CardClass("Hearts", "King")} />
+      <Game />
     </div>
   );
 }

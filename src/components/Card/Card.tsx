@@ -1,7 +1,9 @@
 import CardClass from "./CardClass";
 import SPRITE_SHEET from "../../assets/CardSpriteSheets/deck_classic_light_2color_0.png";
+import type { ComponentPropsWithoutRef } from "react";
+import CardHelper from "./CardHelper";
 
-interface CardProps {
+interface CardProps extends ComponentPropsWithoutRef<"div"> {
   card: CardClass;
   width?: number;
   height?: number;
@@ -17,9 +19,11 @@ const CARD_GAP_VERTICAL = 4;
 
 export default function Card({
   card,
-  width = 40,
-  height = 60,
+  width = 80,
+  height = 120,
   scale = 1,
+  style,
+  ...rest
 }: CardProps) {
   width *= scale;
   height *= scale;
@@ -27,9 +31,11 @@ export default function Card({
   const h_scale = height !== undefined ? height / CARD_HEIGHT : 1;
   const sprite_x =
     CARD_MARGIN_LEFT +
-    (card.StandardCardValue() - 1) * (CARD_WIDTH + CARD_GAP_HORIZONTAL);
+    (CardHelper.StandardCardValue(card) - 1) *
+      (CARD_WIDTH + CARD_GAP_HORIZONTAL);
   const sprite_y =
-    CARD_MARGIN_TOP + card.SuitNumber() * (CARD_HEIGHT + CARD_GAP_VERTICAL);
+    CARD_MARGIN_TOP +
+    CardHelper.SuitNumber(card) * (CARD_HEIGHT + CARD_GAP_VERTICAL);
 
   return (
     <div
@@ -42,7 +48,9 @@ export default function Card({
         backgroundPosition: `-${sprite_x}px -${sprite_y}px`,
         transform: `scale(${w_scale},${h_scale})`,
         margin: `${(height - CARD_HEIGHT) / 2}px ${(width - CARD_WIDTH) / 2}px`,
+        ...style,
       }}
+      {...rest}
     ></div>
   );
 }
