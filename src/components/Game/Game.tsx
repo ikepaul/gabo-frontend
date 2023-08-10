@@ -38,18 +38,15 @@ export default function Game() {
                 if (c.placement === placement) {
                   topCard = { suit: { ...c }.suit, value: { ...c }.value };
                   const nc = { ...newCard, placement };
-                  console.log(nc);
+
                   return nc;
                 }
                 return c;
               });
-              console.log(cards);
               return { ...p, cards };
             }
             return p;
           });
-
-          console.log(players);
 
           setGame((oldGame) => {
             if (oldGame) {
