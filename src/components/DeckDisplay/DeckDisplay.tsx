@@ -56,6 +56,7 @@ export default function DisplayDeck({
         .fill(<></>)
         .map((_, i) => (
           <div
+            key={i}
             style={{
               position: "absolute",
               left: i * 2 + "px",

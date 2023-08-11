@@ -61,6 +61,33 @@ export default function Game() {
       }
     );
 
+    socket?.on(
+      "card-flip",
+      (topCard: CardClass, ownerId: string, placement: number) => {
+        if (topCard && ownerId && placement !== undefined) {
+          if (game) {
+            const players: Player[] = game.players.map((p: Player): Player => {
+              if (p.id === ownerId) {
+                const cards = p.cards.filter((c: GameCard): boolean => {
+                  return c.placement !== placement;
+                });
+                return { ...p, cards };
+              }
+              return p;
+            });
+
+            setGame((oldGame) => {
+              if (oldGame) {
+                setDrawnCard(undefined);
+                return { ...oldGame, players, topCard };
+              }
+              return undefined;
+            });
+          }
+        }
+      }
+    );
+
     socket?.on("draw-from-deck", (deckSize: number) => {
       setGame((oldGame) => {
         if (oldGame) {
@@ -86,9 +113,17 @@ export default function Game() {
     });
   }, [socket, game, game?.players, game?.topCard, game?.activePlayerId]);
 
-  const handleCardClick = (c: GameCard, ownerId: string) => {
-    if (ownerId === socket?.id) {
-      socket.emit("hand-card-swap", c.placement);
+  const handleCardClick = (
+    e: React.MouseEvent<HTMLElement>,
+    card: GameCard,
+    ownerId: string
+  ) => {
+    e.preventDefault();
+    if (e.nativeEvent.button === 2) {
+      socket?.emit("card-flip", card, ownerId, socket.id);
+    }
+    if (drawnCard && ownerId === socket?.id) {
+      socket.emit("hand-card-swap", card.placement);
     }
   };
 
@@ -99,17 +134,19 @@ export default function Game() {
           setDrawnCard(undefined);
         });
       } else {
-        socket.emit(
-          "draw-from-pile",
-          (pickedUpCard: CardClass, newTopCard: CardClass) => {
-            setDrawnCard(pickedUpCard);
-            setGame((oldGame) => {
-              if (oldGame) {
-                return { ...oldGame, topCard: newTopCard };
-              }
-            });
-          }
-        );
+        if (game.topCard) {
+          socket.emit(
+            "draw-from-pile",
+            (pickedUpCard: CardClass, newTopCard: CardClass) => {
+              setDrawnCard(pickedUpCard);
+              setGame((oldGame) => {
+                if (oldGame) {
+                  return { ...oldGame, topCard: newTopCard };
+                }
+              });
+            }
+          );
+        }
       }
     }
   };
@@ -172,9 +209,8 @@ export default function Game() {
       )}
       {playerCards && (
         <PlayerHand
-          handleCardClick={(c) =>
-            handleCardClick(c, socket?.id !== undefined ? socket.id : "")
-          }
+          handleLeftClick={(e, c) => handleCardClick(e, c, player.id)}
+          handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
           player={player}
           isActivePlayer={game?.activePlayerId === player.id}
         />
@@ -183,8 +219,10 @@ export default function Game() {
         return (
           opponent && (
             <PlayerHand
+              key={opponent.id}
               placement={"top"}
-              handleCardClick={(c) => handleCardClick(c, opponent.id)}
+              handleLeftClick={(e, c) => handleCardClick(e, c, opponent.id)}
+              handleRightClick={(e, c) => handleCardClick(e, c, opponent.id)}
               player={opponent}
               isActivePlayer={game?.activePlayerId === opponent.id}
             />

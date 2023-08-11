@@ -12,14 +12,16 @@ interface PlacementStyling {
 
 interface PlayerHandProps {
   player: Player;
-  handleCardClick: (a: GameCard) => void;
+  handleLeftClick: (e: React.MouseEvent<HTMLElement>, a: GameCard) => void;
+  handleRightClick: (e: React.MouseEvent<HTMLElement>, a: GameCard) => void;
   placement?: Placement;
   isActivePlayer?: boolean;
 }
 
 export default function PlayerHand({
   player: { cards, id },
-  handleCardClick,
+  handleLeftClick,
+  handleRightClick,
   placement = "bottom",
   isActivePlayer = false,
 }: PlayerHandProps) {
@@ -66,8 +68,11 @@ export default function PlayerHand({
         {cards.map((card) => (
           <Card
             key={card.placement}
-            onClick={() => {
-              handleCardClick(card);
+            onClick={(e) => {
+              handleLeftClick(e, card);
+            }}
+            onContextMenu={(e) => {
+              handleRightClick(e, card);
             }}
             card={card}
           />
