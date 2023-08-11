@@ -18,10 +18,10 @@ const CARD_GAP_HORIZONTAL = 24;
 const CARD_GAP_VERTICAL = 4;
 
 export default function Card({
-  card,
   width = 80,
   height = 120,
   scale = 1,
+  card,
   style,
   ...rest
 }: CardProps) {

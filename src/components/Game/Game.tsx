@@ -5,6 +5,7 @@ import { Socket, io } from "socket.io-client";
 import { GameCard, GameClass, Player } from "./GameClass";
 import Card from "../Card/Card";
 import CardOutline from "../Card/CardOutline";
+import DeckDisplay from "../DeckDisplay/DeckDisplay";
 
 export default function Game() {
   const [socket, setSocket] = useState<Socket>();
@@ -59,6 +60,14 @@ export default function Game() {
         }
       }
     );
+
+    socket?.on("draw-from-deck", (deckSize: number) => {
+      setGame((oldGame) => {
+        if (oldGame) {
+          return { ...oldGame, deckSize };
+        }
+      });
+    });
 
     socket?.on("update-topcard", (topCard: CardClass) => {
       setGame((oldGame) => {
@@ -123,8 +132,7 @@ export default function Game() {
 
   const player = game?.players.find((p) => p.id === socket?.id);
   const playerCards = player?.cards;
-  const opponent = game?.players.filter((p) => p.id !== socket?.id)[0];
-  const opponentCards = opponent?.cards;
+  const opponents = game?.players.filter((p) => p.id !== socket?.id);
   return (
     <div>
       <button
@@ -138,7 +146,12 @@ export default function Game() {
       </button>
       <button onClick={restartGame}>Restart Game</button>
       <button onClick={logGame}>Log Game</button>
-      <button onClick={drawCard}>DrawCard</button>
+      <DeckDisplay
+        style={{ position: "absolute", top: "50vh", left: "35vw" }}
+        onClick={drawCard}
+        deckSize={game?.deckSize}
+        outline={game?.deckSize == 0}
+      />
       {drawnCard && (
         <Card
           style={{ position: "absolute", bottom: "10vh", left: "10vw" }}
@@ -166,14 +179,18 @@ export default function Game() {
           isActivePlayer={game?.activePlayerId === player.id}
         />
       )}
-      {opponentCards && (
-        <PlayerHand
-          placement={"top"}
-          handleCardClick={(c) => handleCardClick(c, opponent.id)}
-          player={opponent}
-          isActivePlayer={game?.activePlayerId === opponent.id}
-        />
-      )}
+      {opponents?.map((opponent) => {
+        return (
+          opponent && (
+            <PlayerHand
+              placement={"top"}
+              handleCardClick={(c) => handleCardClick(c, opponent.id)}
+              player={opponent}
+              isActivePlayer={game?.activePlayerId === opponent.id}
+            />
+          )
+        );
+      })}
     </div>
   );
 }

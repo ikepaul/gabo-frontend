@@ -15,6 +15,7 @@ interface GameClass {
   state: GameState;
   activePlayerId: string;
   topCard: Card | undefined;
+  deckSize: number;
 }
 
 export type { GameClass, GameCard, Player };
