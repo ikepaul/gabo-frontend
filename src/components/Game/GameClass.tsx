@@ -3,7 +3,10 @@ import Card from "../Card/CardClass";
 interface GameCard extends Card {
   placement: number;
 }
-
+interface InfoGive {
+  ownerId: string;
+  placement: number;
+}
 interface Player {
   id: string;
   cards: GameCard[];
@@ -18,4 +21,4 @@ interface GameClass {
   deckSize: number;
 }
 
-export type { GameClass, GameCard, Player };
+export type { GameClass, GameCard, Player, InfoGive };
