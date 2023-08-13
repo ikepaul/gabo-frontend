@@ -55,6 +55,8 @@ export default function PlayerHand({
       break;
   }
 
+  const placedCards = [...cards].sort((a, b) => a.placement - b.placement);
+
   return (
     <div
       style={{
@@ -65,7 +67,7 @@ export default function PlayerHand({
     >
       {isActivePlayer && <div>Playing</div>}
       <div>
-        {cards.map((card) => (
+        {placedCards.map((card) => (
           <Card
             key={card.placement}
             onClick={(e) => {
