@@ -3,9 +3,18 @@ import Card from "../Card/CardClass";
 interface GameCard extends Card {
   placement: number;
 }
+
+interface CardTimer {
+  placement: number;
+  time: number;
+  maxTime: number;
+}
+
 interface InfoGive {
   ownerId: string;
   placement: number;
+  time: number;
+  maxTime: number;
 }
 interface Player {
   id: string;
@@ -21,4 +30,4 @@ interface GameClass {
   deckSize: number;
 }
 
-export type { GameClass, GameCard, Player, InfoGive };
+export type { GameClass, GameCard, Player, InfoGive, CardTimer };

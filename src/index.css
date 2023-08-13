@@ -30,3 +30,35 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+.arc {
+  overflow: hidden;
+  position: absolute;
+  /* make sure top & left values are - the width of the border */
+  /* the bottom right corner is the centre of the parent circle */
+  top: -1em;
+  right: 50%;
+  bottom: 50%;
+  left: -1em;
+  /* the transform origin is the bottom right corner */
+  transform-origin: 100% 100%;
+  /* rotate by any angle */
+  /* the skew angle is 90deg - the angle you want for the arc */
+  transform: rotate(45deg) skewX(0deg);
+}
+
+.arc:before {
+  box-sizing: border-box;
+  display: block;
+  border: solid 1em navy;
+  width: 200%;
+  height: 200%;
+  border-radius: 50%;
+  transform: skewX(0deg);
+  content: '';
+}
+
+.circle {
+  position: relative;
+  border-radius: 50%;
+}

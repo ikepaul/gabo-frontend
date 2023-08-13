@@ -25,6 +25,23 @@ export default function Game() {
   }, []);
 
   useEffect(() => {
+    const DELAY = 50;
+    if (availableGives.length > 0) {
+      const interval = setInterval(() => {
+        const newGives = availableGives.map((ag) => {
+          const newG = { ...ag };
+          newG.time -= DELAY;
+          return newG;
+        });
+        setAvailableGives(newGives);
+      }, DELAY);
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [availableGives]);
+
+  useEffect(() => {
     socket?.on("game-setup", (newGame: GameClass) => {
       setGame({ ...newGame });
       setDrawnCard(undefined);
@@ -169,16 +186,21 @@ export default function Game() {
         card,
         ownerId,
         socket.id,
-        (punishment: CardClass | "none") => {
-          console.log(punishment);
-          if (punishment !== "none") {
+        (punishmentOrMaxTime: CardClass | number) => {
+          console.log(punishmentOrMaxTime);
+          if (typeof punishmentOrMaxTime !== "number") {
             //Set punishment card
           } else {
             if (ownerId !== socket.id) {
               //Flipped an opponents card
               setAvailableGives((prev) => [
                 ...prev,
-                { ownerId, placement: card.placement },
+                {
+                  ownerId,
+                  placement: card.placement,
+                  maxTime: punishmentOrMaxTime,
+                  time: punishmentOrMaxTime,
+                },
               ]);
             }
           }
@@ -283,9 +305,18 @@ export default function Game() {
         />
       )}
       {opponents?.map((opponent) => {
+        const gives = availableGives.filter((ag) => ag.ownerId === opponent.id);
+
+        console.log(gives);
+
         return (
           opponent && (
             <PlayerHand
+              timers={gives.map((ag) => ({
+                placement: ag.placement,
+                time: ag.time,
+                maxTime: ag.maxTime,
+              }))}
               key={opponent.id}
               placement={"top"}
               handleLeftClick={(e, c) => handleCardClick(e, c, opponent.id)}
