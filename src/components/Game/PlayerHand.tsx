@@ -87,7 +87,7 @@ export default function PlayerHand({
             />
           ) : (
             <Timer
-              key={cardOrTimer.placement}
+              key={cardOrTimer.placement + cardOrTimer.maxTime}
               time={cardOrTimer.time}
               maxTime={cardOrTimer.maxTime}
             />
