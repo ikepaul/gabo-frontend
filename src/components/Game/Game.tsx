@@ -10,9 +10,10 @@ import DeckDisplay from "../DeckDisplay/DeckDisplay";
 interface GameProps {
   socket: Socket | undefined;
   gameId: string;
+  leaveGame: () => void;
 }
 
-export default function Game({ socket, gameId }: GameProps) {
+export default function Game({ socket, gameId, leaveGame }: GameProps) {
   const [game, setGame] = useState<GameClass>();
   const [drawnCard, setDrawnCard] = useState<CardClass>();
   const [availableGives, setAvailableGives] = useState<InfoGive[]>([]);
@@ -279,10 +280,16 @@ export default function Game({ socket, gameId }: GameProps) {
         onClick={() => {
           navigator.clipboard.writeText(gameId);
         }}
-        style={{ position: "absolute", top: "5px", left: "5px" }}
+        style={{ position: "absolute", top: "5px", left: "5px", zIndex: 1 }}
       >
         {gameId}
       </div>
+      <button
+        style={{ position: "absolute", top: "40px", left: "5px", zIndex: 1 }}
+        onClick={leaveGame}
+      >
+        Leave Game
+      </button>
       <DeckDisplay
         style={{ position: "absolute", top: "50vh", left: "35vw" }}
         onClick={drawCard}

@@ -19,11 +19,19 @@ function App() {
     return () => {
       if (socket) {
         socket.disconnect();
+        leaveGame();
         setGameId("");
         console.log("Disconnecting");
       }
     };
   }, []);
+
+  const leaveGame = () => {
+    socket?.emit("leave-game", gameId, (res: string) => {
+      console.log(res);
+      setGameId("");
+    });
+  };
 
   const createGame = () => {
     socket?.emit("create-game", (id: string) => {
@@ -62,7 +70,7 @@ function App() {
           <button onClick={joinGame}>Join Game</button>
         </div>
       ) : (
-        <Game socket={socket} gameId={gameId} />
+        <Game socket={socket} leaveGame={leaveGame} gameId={gameId} />
       )}
     </div>
   );
