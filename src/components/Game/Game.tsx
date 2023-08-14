@@ -80,6 +80,22 @@ export default function Game() {
     );
 
     socket?.on(
+      "update-timer-give",
+      (ownerId: string, placement: number, timeLeft: number) => {
+        setAvailableGives((_ags) => {
+          const ags = [..._ags];
+          const ag = ags.find(
+            (ag) => ag.ownerId == ownerId && ag.placement == placement
+          );
+          if (ag !== undefined) {
+            ag.time = timeLeft;
+          }
+          return ags;
+        });
+      }
+    );
+
+    socket?.on(
       "card-flip",
       (topCard: CardClass, ownerId: string, placement: number) => {
         if (topCard && ownerId && placement !== undefined) {
@@ -187,7 +203,6 @@ export default function Game() {
         ownerId,
         socket.id,
         (punishmentOrMaxTime: CardClass | number) => {
-          console.log(punishmentOrMaxTime);
           if (typeof punishmentOrMaxTime !== "number") {
             //Set punishment card
           } else {
@@ -306,8 +321,6 @@ export default function Game() {
       )}
       {opponents?.map((opponent) => {
         const gives = availableGives.filter((ag) => ag.ownerId === opponent.id);
-
-        console.log(gives);
 
         return (
           opponent && (
