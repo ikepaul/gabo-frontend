@@ -1,29 +1,21 @@
 import { useEffect, useState } from "react";
 import CardClass from "./../Card/CardClass";
 import PlayerHand from "./PlayerHand";
-import { Socket, io } from "socket.io-client";
+import { Socket } from "socket.io-client";
 import { GameCard, GameClass, InfoGive, Player } from "./GameClass";
 import Card from "../Card/Card";
 import CardOutline from "../Card/CardOutline";
 import DeckDisplay from "../DeckDisplay/DeckDisplay";
 
-export default function Game() {
-  const [socket, setSocket] = useState<Socket>();
+interface GameProps {
+  socket: Socket | undefined;
+  gameId: string;
+}
+
+export default function Game({ socket, gameId }: GameProps) {
   const [game, setGame] = useState<GameClass>();
   const [drawnCard, setDrawnCard] = useState<CardClass>();
   const [availableGives, setAvailableGives] = useState<InfoGive[]>([]);
-
-  useEffect(() => {
-    const socket = io("localhost:3000");
-    setSocket(socket);
-    return () => {
-      if (socket) {
-        socket.disconnect();
-        console.log("Disconnecting");
-      }
-    };
-  }, []);
-
   useEffect(() => {
     const DELAY = 50;
     if (availableGives.length > 0) {
@@ -43,6 +35,7 @@ export default function Game() {
 
   useEffect(() => {
     socket?.on("game-setup", (newGame: GameClass) => {
+      console.log(newGame);
       setGame({ ...newGame });
       setDrawnCard(undefined);
     });
@@ -199,6 +192,7 @@ export default function Game() {
     if (e.nativeEvent.button === 2) {
       socket?.emit(
         "card-flip",
+        gameId,
         card,
         ownerId,
         socket.id,
@@ -223,9 +217,9 @@ export default function Game() {
       );
     } else {
       if (availableGives.length > 0 && ownerId === socket?.id) {
-        socket.emit("give-card", card.placement);
+        socket.emit("give-card", gameId, card.placement);
       } else if (drawnCard && ownerId === socket?.id) {
-        socket.emit("hand-card-swap", card.placement);
+        socket.emit("hand-card-swap", gameId, card.placement);
       }
     }
   };
@@ -233,13 +227,14 @@ export default function Game() {
   const handleTopCardClick = () => {
     if (game && game.activePlayerId === socket?.id) {
       if (drawnCard) {
-        socket.emit("put-on-pile", () => {
+        socket.emit("put-on-pile", gameId, () => {
           setDrawnCard(undefined);
         });
       } else {
         if (game.topCard) {
           socket.emit(
             "draw-from-pile",
+            gameId,
             (pickedUpCard: CardClass, newTopCard: CardClass) => {
               setDrawnCard(pickedUpCard);
               setGame((oldGame) => {
@@ -254,20 +249,15 @@ export default function Game() {
     }
   };
 
-  const restartGame = () => {
-    socket?.emit("RestartGame");
-  };
-
-  const logGame = () => {
-    socket?.emit("LogGame");
-  };
-
   const drawCard = () => {
     if (!drawnCard) {
-      socket?.emit("draw-from-deck", (card: CardClass) => {
+      socket?.emit("draw-from-deck", gameId, (card: CardClass) => {
         setDrawnCard(card);
       });
     }
+  };
+  const restartGame = () => {
+    socket?.emit("RestartGame", gameId);
   };
 
   const player = game?.players.find((p) => p.id === socket?.id);
@@ -285,8 +275,14 @@ export default function Game() {
         LOG GAME HERE
       </button>
       <button onClick={restartGame}>Restart Game</button>
-      <button onClick={logGame}>Log Game</button>
-      <div>{JSON.stringify(availableGives)}</div>
+      <div
+        onClick={() => {
+          navigator.clipboard.writeText(gameId);
+        }}
+        style={{ position: "absolute", top: "5px", left: "5px" }}
+      >
+        {gameId}
+      </div>
       <DeckDisplay
         style={{ position: "absolute", top: "50vh", left: "35vw" }}
         onClick={drawCard}
