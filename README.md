@@ -8,6 +8,7 @@
 - You can choose to swap (by left-clicking on one of your cards) or just place it down.
 - You can flip an opponents card (by right-clicking on it) if the card in the middle is of the same value.
 - A successful flip means you can give that opponent one of your cards (by left-clicking on the card you wish to give)
+- Multiple games taking part at the same time, you can join a game by id.
 
 ## Missing Features
 - Hidden cards
@@ -15,8 +16,7 @@
 - Card abilities
 - Choosing how many cards you wish to play with.
 - Punishment cards for an incorrect flip.
-- Lobby where players can click to play the game
-- Multiple games taking part at the same time.
+- Lobby where players can wait for other players to join and then start when they feel like it.
 
 # React + TypeScript + Vite
 
