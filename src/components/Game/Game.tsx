@@ -42,6 +42,19 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     });
 
     socket?.on(
+      "player-left",
+      (updatedPlayers: Player[], activePlayerId: string) => {
+        setGame((oldGame) => {
+          if (oldGame) {
+            return { ...oldGame, players: updatedPlayers, activePlayerId };
+          }
+
+          return undefined;
+        });
+      }
+    );
+
+    socket?.on(
       "hand-card-swap",
       (playerId: string, placement: number, newCard: CardClass) => {
         if (game) {
