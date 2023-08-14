@@ -3,11 +3,11 @@
 
 ## Current Features
 
--You can see all your cards
--You can pick up a card from the deck
--You can choose to swap (by left-clicking on one of your cards) or just place it down.
--You can flip an opponents card (by right-clicking on it) if the card in the middle is of the same value.
--A successful flip means you can give that opponent one of your cards (by left-clicking on the card you wish to give)
+- You can see all your cards
+- You can pick up a card from the deck
+- You can choose to swap (by left-clicking on one of your cards) or just place it down.
+- You can flip an opponents card (by right-clicking on it) if the card in the middle is of the same value.
+- A successful flip means you can give that opponent one of your cards (by left-clicking on the card you wish to give)
 
 ## Missing Features
 - Hidden cards
