@@ -1,3 +1,23 @@
+
+# GABO 
+
+## Current Features
+
+-You can see all your cards
+-You can pick up a card from the deck
+-You can choose to swap (by left-clicking on one of your cards) or just place it down.
+-You can flip an opponents card (by right-clicking on it) if the card in the middle is of the same value.
+-A successful flip means you can give that opponent one of your cards (by left-clicking on the card you wish to give)
+
+## Missing Features
+-Hidden cards
+-Being able to look at a select few of your own cards at the beginning of the game.
+-Card abilities
+-Choosing how many cards you wish to play with.
+-Punishment cards for an incorrect flip.
+-Lobby where players can click to play the game
+-Multiple games taking part at the same time.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -25,3 +45,5 @@ If you are developing a production application, we recommend updating the config
 - Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
 - Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
 - Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+
+
