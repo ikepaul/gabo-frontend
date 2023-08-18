@@ -7,6 +7,7 @@ function App() {
   const [socket, setSocket] = useState<Socket>();
   const [gameId, setGameId] = useState<string>("");
   const [inputGameId, setInputGameId] = useState<string>("");
+  const [numOfCards, setNumOfCards] = useState<number>(4);
 
   useEffect(() => {
     const socket = io("localhost:3000");
@@ -34,7 +35,7 @@ function App() {
   };
 
   const createGame = () => {
-    socket?.emit("create-game", (id: string) => {
+    socket?.emit("create-game", numOfCards, (id: string) => {
       setGameId(id);
     });
   };
@@ -55,19 +56,46 @@ function App() {
     );
   };
 
+  const maxNumOfCards = 8;
+  const minNumOfCards = 1;
+
   return (
     <div>
       {gameId === "" ? (
         <div>
-          <input
-            type="text"
-            value={inputGameId}
-            onChange={(e) => {
-              setInputGameId(e.target.value);
-            }}
-          />
-          <button onClick={createGame}>Create Game</button>
-          <button onClick={joinGame}>Join Game</button>
+          <div>
+            <button onClick={createGame}>Create Game</button>
+            <input
+              type="number"
+              value={numOfCards}
+              min={minNumOfCards}
+              max={maxNumOfCards}
+              onChange={(e) => {
+                let val = parseInt(e.target.value);
+                if (isNaN(val)) {
+                  val = minNumOfCards;
+                }
+                if (val > maxNumOfCards) {
+                  val = maxNumOfCards;
+                }
+                if (val < minNumOfCards) {
+                  val = minNumOfCards;
+                }
+                setNumOfCards(val);
+              }}
+              id=""
+            />
+          </div>
+          <div>
+            <input
+              type="text"
+              value={inputGameId}
+              onChange={(e) => {
+                setInputGameId(e.target.value);
+              }}
+            />
+            <button onClick={joinGame}>Join Game</button>
+          </div>
         </div>
       ) : (
         <Game socket={socket} leaveGame={leaveGame} gameId={gameId} />
