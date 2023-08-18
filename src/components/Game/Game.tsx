@@ -35,40 +35,86 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   }, [availableGives]);
 
   useEffect(() => {
-    socket?.on("game-setup", (newGame: GameClass) => {
+    const handleGameSetup = (newGame: GameClass) => {
       console.log(newGame);
       setGame({ ...newGame });
       setDrawnCard(undefined);
-    });
+    };
 
-    socket?.on(
-      "player-left",
-      (updatedPlayers: Player[], activePlayerId: string) => {
+    const handlePlayerLeft = (
+      updatedPlayers: Player[],
+      activePlayerId: string
+    ) => {
+      setGame((oldGame) => {
+        if (oldGame) {
+          return { ...oldGame, players: updatedPlayers, activePlayerId };
+        }
+
+        return undefined;
+      });
+    };
+
+    const handleHandCardSwap = (
+      playerId: string,
+      placement: number,
+      newCard: CardClass
+    ) => {
+      if (game) {
+        let topCard: CardClass;
+        const players: Player[] = game.players.map((p: Player): Player => {
+          if (p.id === playerId) {
+            const cards = p.cards.map((c: GameCard): GameCard => {
+              if (c.placement === placement) {
+                topCard = { suit: { ...c }.suit, value: { ...c }.value };
+                const nc = { ...newCard, placement };
+
+                return nc;
+              }
+              return c;
+            });
+            return { ...p, cards };
+          }
+          return p;
+        });
+
         setGame((oldGame) => {
           if (oldGame) {
-            return { ...oldGame, players: updatedPlayers, activePlayerId };
+            setDrawnCard(undefined);
+            return { ...oldGame, players, topCard };
           }
-
           return undefined;
         });
       }
-    );
+    };
 
-    socket?.on(
-      "hand-card-swap",
-      (playerId: string, placement: number, newCard: CardClass) => {
+    const handleUpdateTimerGive = (
+      ownerId: string,
+      placement: number,
+      timeLeft: number
+    ) => {
+      setAvailableGives((_ags) => {
+        const ags = [..._ags];
+        const ag = ags.find(
+          (ag) => ag.ownerId == ownerId && ag.placement == placement
+        );
+        if (ag !== undefined) {
+          ag.time = timeLeft;
+        }
+        return ags;
+      });
+    };
+
+    const handleCardFlip = (
+      topCard: CardClass,
+      ownerId: string,
+      placement: number
+    ) => {
+      if (topCard && ownerId && placement !== undefined) {
         if (game) {
-          let topCard: CardClass;
           const players: Player[] = game.players.map((p: Player): Player => {
-            if (p.id === playerId) {
-              const cards = p.cards.map((c: GameCard): GameCard => {
-                if (c.placement === placement) {
-                  topCard = { suit: { ...c }.suit, value: { ...c }.value };
-                  const nc = { ...newCard, placement };
-
-                  return nc;
-                }
-                return c;
+            if (p.id === ownerId) {
+              const cards = p.cards.filter((c: GameCard): boolean => {
+                return c.placement !== placement;
               });
               return { ...p, cards };
             }
@@ -84,68 +130,25 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           });
         }
       }
-    );
+    };
 
-    socket?.on(
-      "update-timer-give",
-      (ownerId: string, placement: number, timeLeft: number) => {
-        setAvailableGives((_ags) => {
-          const ags = [..._ags];
-          const ag = ags.find(
-            (ag) => ag.ownerId == ownerId && ag.placement == placement
-          );
-          if (ag !== undefined) {
-            ag.time = timeLeft;
-          }
-          return ags;
-        });
-      }
-    );
-
-    socket?.on(
-      "card-flip",
-      (topCard: CardClass, ownerId: string, placement: number) => {
-        if (topCard && ownerId && placement !== undefined) {
-          if (game) {
-            const players: Player[] = game.players.map((p: Player): Player => {
-              if (p.id === ownerId) {
-                const cards = p.cards.filter((c: GameCard): boolean => {
-                  return c.placement !== placement;
-                });
-                return { ...p, cards };
-              }
-              return p;
-            });
-
-            setGame((oldGame) => {
-              if (oldGame) {
-                setDrawnCard(undefined);
-                return { ...oldGame, players, topCard };
-              }
-              return undefined;
-            });
-          }
-        }
-      }
-    );
-
-    socket?.on("draw-from-deck", (deckSize: number) => {
+    const handleDrawFromDeck = (deckSize: number) => {
       setGame((oldGame) => {
         if (oldGame) {
           return { ...oldGame, deckSize };
         }
       });
-    });
+    };
 
-    socket?.on("update-topcard", (topCard: CardClass) => {
+    const handleUpdateTopCard = (topCard: CardClass) => {
       setGame((oldGame) => {
         if (oldGame) {
           return { ...oldGame, topCard };
         }
       });
-    });
+    };
 
-    socket?.on("timeout-give", (ownerId, placement) => {
+    const handleTimeoutGive = (ownerId: string, placement: number) => {
       setAvailableGives((p) => {
         const prev = [...p];
         const index = prev.findIndex(
@@ -154,9 +157,9 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         prev.splice(index, 1);
         return prev;
       });
-    });
+    };
 
-    socket?.on("give-card", (from: InfoGive, to: InfoGive) => {
+    const handleGiveCard = (from: InfoGive, to: InfoGive) => {
       if (from !== undefined && to !== undefined) {
         if (game) {
           let givenCard: GameCard | undefined;
@@ -186,15 +189,67 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           });
         }
       }
-    });
+    };
 
-    socket?.on("end-turn", (activePlayerId: string) => {
+    const handleEndTurn = (activePlayerId: string) => {
       setGame((oldGame) => {
         if (oldGame) {
           return { ...oldGame, activePlayerId };
         }
       });
-    });
+    };
+
+    const handlePunishmentCard = (playerId: string, card: GameCard) => {
+      if (game === undefined) {
+        return;
+      }
+      const players: Player[] = game.players.map((player: Player): Player => {
+        if (player.id === playerId) {
+          const cards = player.cards.map((pc) => ({
+            ...pc,
+          }));
+          return {
+            ...player,
+            cards: [...cards, card],
+          };
+        }
+        return player;
+      });
+
+      setGame((oldGame) => {
+        if (oldGame) {
+          setDrawnCard(undefined);
+          return { ...oldGame, players };
+        }
+        return undefined;
+      });
+    };
+
+    socket?.on("game-setup", handleGameSetup);
+    socket?.on("player-left", handlePlayerLeft);
+    socket?.on("hand-card-swap", handleHandCardSwap);
+    socket?.on("update-timer-give", handleUpdateTimerGive);
+    socket?.on("card-flip", handleCardFlip);
+    socket?.on("draw-from-deck", handleDrawFromDeck);
+    socket?.on("update-topcard", handleUpdateTopCard);
+    socket?.on("timeout-give", handleTimeoutGive);
+    socket?.on("give-card", handleGiveCard);
+    socket?.on("end-turn", handleEndTurn);
+    socket?.on("punishment-card", handlePunishmentCard);
+
+    return () => {
+      socket?.removeListener("game-setup", handleGameSetup);
+      socket?.removeListener("player-left", handlePlayerLeft);
+      socket?.removeListener("hand-card-swap", handleHandCardSwap);
+      socket?.removeListener("update-timer-give", handleUpdateTimerGive);
+      socket?.removeListener("card-flip", handleCardFlip);
+      socket?.removeListener("draw-from-deck", handleDrawFromDeck);
+      socket?.removeListener("update-topcard", handleUpdateTopCard);
+      socket?.removeListener("timeout-give", handleTimeoutGive);
+      socket?.removeListener("give-card", handleGiveCard);
+      socket?.removeListener("end-turn", handleEndTurn);
+      socket?.removeListener("punishment-card", handlePunishmentCard);
+    };
   }, [socket, game, game?.players, game?.topCard, game?.activePlayerId]);
 
   const handleCardClick = (
@@ -204,54 +259,20 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   ) => {
     e.preventDefault();
     if (e.nativeEvent.button === 2) {
-      socket?.emit(
-        "card-flip",
-        gameId,
-        card,
-        ownerId,
-        (punishmentOrMaxTime: GameCard | number) => {
-          if (typeof punishmentOrMaxTime !== "number") {
-            if (game === undefined) {
-              return;
-            }
-            const players: Player[] = game.players.map(
-              (player: Player): Player => {
-                if (player.id === ownerId) {
-                  const cards = player.cards.map((pc) => ({
-                    ...pc,
-                  }));
-                  return {
-                    ...player,
-                    cards: [...cards, punishmentOrMaxTime],
-                  };
-                }
-                return player;
-              }
-            );
-
-            setGame((oldGame) => {
-              if (oldGame) {
-                setDrawnCard(undefined);
-                return { ...oldGame, players };
-              }
-              return undefined;
-            });
-          } else {
-            if (ownerId !== socket.id) {
-              //Flipped an opponents card
-              setAvailableGives((prev) => [
-                ...prev,
-                {
-                  ownerId,
-                  placement: card.placement,
-                  maxTime: punishmentOrMaxTime,
-                  time: punishmentOrMaxTime,
-                },
-              ]);
-            }
-          }
+      socket?.emit("card-flip", gameId, card, ownerId, (maxTime: number) => {
+        if (ownerId !== socket.id) {
+          //Flipped an opponents card
+          setAvailableGives((prev) => [
+            ...prev,
+            {
+              ownerId,
+              placement: card.placement,
+              maxTime: maxTime,
+              time: maxTime,
+            },
+          ]);
         }
-      );
+      });
     } else {
       if (availableGives.length > 0 && ownerId === socket?.id) {
         socket.emit("give-card", gameId, card.placement);
@@ -297,13 +318,35 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     socket?.emit("RestartGame", gameId);
   };
 
-  const player = game?.players.find((p) => p.id === socket?.id);
+  if (game === undefined) {
+    return (
+      <div>
+        <div
+          onClick={() => {
+            navigator.clipboard.writeText(gameId);
+          }}
+          style={{ position: "absolute", top: "5px", left: "5px", zIndex: 1 }}
+        >
+          {gameId}
+        </div>
+        <button
+          style={{ position: "absolute", top: "40px", left: "5px", zIndex: 1 }}
+          onClick={leaveGame}
+        >
+          Leave Game
+        </button>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  const player = game.players.find((p) => p.id === socket?.id);
   const playerCards = player?.cards;
   const punishmentCards =
     game === undefined
       ? 0
       : player?.cards.filter((c) => c.placement >= game.numOfCards);
-  const opponents = game?.players.filter((p) => p.id !== socket?.id);
+  const opponents = game.players.filter((p) => p.id !== socket?.id);
   return (
     <div>
       <button
@@ -334,8 +377,8 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       <DeckDisplay
         style={{ position: "absolute", top: "50vh", left: "35vw" }}
         onClick={drawCard}
-        deckSize={game?.deckSize}
-        outline={game?.deckSize == 0}
+        deckSize={game.deckSize}
+        outline={game.deckSize == 0}
       />
       {drawnCard && (
         <Card
@@ -343,7 +386,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           card={drawnCard}
         />
       )}
-      {game?.topCard ? (
+      {game.topCard ? (
         <Card
           style={{ position: "absolute", top: "50vh", left: "50vw" }}
           card={game.topCard}
@@ -360,7 +403,8 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           handleLeftClick={(e, c) => handleCardClick(e, c, player.id)}
           handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
           player={player}
-          isActivePlayer={game?.activePlayerId === player.id}
+          isActivePlayer={game.activePlayerId === player.id}
+          numOfCards={game.numOfCards}
         />
       )}
       {opponents?.map((opponent) => {
@@ -379,7 +423,8 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
               handleLeftClick={(e, c) => handleCardClick(e, c, opponent.id)}
               handleRightClick={(e, c) => handleCardClick(e, c, opponent.id)}
               player={opponent}
-              isActivePlayer={game?.activePlayerId === opponent.id}
+              isActivePlayer={game.activePlayerId === opponent.id}
+              numOfCards={game.numOfCards}
             />
           )
         );

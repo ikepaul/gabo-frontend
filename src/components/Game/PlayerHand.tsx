@@ -15,6 +15,7 @@ interface PlayerHandProps {
   player: Player;
   handleLeftClick: (e: React.MouseEvent<HTMLElement>, a: GameCard) => void;
   handleRightClick: (e: React.MouseEvent<HTMLElement>, a: GameCard) => void;
+  numOfCards: number; //Number of cards each player starts with
   placement?: Placement;
   isActivePlayer?: boolean;
   timers?: CardTimer[];
@@ -24,6 +25,7 @@ export default function PlayerHand({
   player: { cards, id },
   handleLeftClick,
   handleRightClick,
+  numOfCards,
   placement = "bottom",
   isActivePlayer = false,
   timers = [],
@@ -76,6 +78,10 @@ export default function PlayerHand({
         {placedCardsOrTimers.map((cardOrTimer) =>
           "suit" in cardOrTimer ? (
             <Card
+              style={{
+                boxShadow:
+                  cardOrTimer.placement >= numOfCards ? "0 0 5px red" : "",
+              }}
               key={cardOrTimer.placement}
               onClick={(e) => {
                 handleLeftClick(e, cardOrTimer);
