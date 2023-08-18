@@ -10,12 +10,12 @@
 - A successful flip means you can give that opponent one of your cards (by left-clicking on the card you wish to give)
 - Multiple games taking part at the same time, you can join a game by id.
 - Punishment cards for an incorrect flip.
+- Choosing how many cards you wish to play with.
 
 ## Missing Features
 - Hidden cards
 - Being able to look at a select few of your own cards at the beginning of the game.
 - Card abilities
-- Choosing how many cards you wish to play with.
 - Lobby where players can wait for other players to join and then start when they feel like it.
 
 # React + TypeScript + Vite
