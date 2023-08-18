@@ -28,6 +28,7 @@ interface GameClass {
   activePlayerId: string;
   topCard: Card | undefined;
   deckSize: number;
+  numOfCards: number;
 }
 
 export type { GameClass, GameCard, Player, InfoGive, CardTimer };
