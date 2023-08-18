@@ -209,10 +209,33 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         gameId,
         card,
         ownerId,
-        socket.id,
-        (punishmentOrMaxTime: CardClass | number) => {
+        (punishmentOrMaxTime: GameCard | number) => {
           if (typeof punishmentOrMaxTime !== "number") {
-            //Set punishment card
+            if (game === undefined) {
+              return;
+            }
+            const players: Player[] = game.players.map(
+              (player: Player): Player => {
+                if (player.id === ownerId) {
+                  const cards = player.cards.map((pc) => ({
+                    ...pc,
+                  }));
+                  return {
+                    ...player,
+                    cards: [...cards, punishmentOrMaxTime],
+                  };
+                }
+                return player;
+              }
+            );
+
+            setGame((oldGame) => {
+              if (oldGame) {
+                setDrawnCard(undefined);
+                return { ...oldGame, players };
+              }
+              return undefined;
+            });
           } else {
             if (ownerId !== socket.id) {
               //Flipped an opponents card
@@ -276,6 +299,10 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
 
   const player = game?.players.find((p) => p.id === socket?.id);
   const playerCards = player?.cards;
+  const punishmentCards =
+    game === undefined
+      ? 0
+      : player?.cards.filter((c) => c.placement >= game.numOfCards);
   const opponents = game?.players.filter((p) => p.id !== socket?.id);
   return (
     <div>
@@ -283,6 +310,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         onClick={() => {
           console.log(game);
           console.log(playerCards);
+          console.log(punishmentCards);
           console.log(socket?.id);
         }}
       >
