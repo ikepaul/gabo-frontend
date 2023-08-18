@@ -65,6 +65,10 @@ export default function PlayerHand({
     ...timers,
   ].sort((a, b) => a.placement - b.placement);
 
+  const punishmentCardStyling = {
+    border: "1px dashed crimson",
+  };
+
   return (
     <div
       style={{
@@ -78,10 +82,9 @@ export default function PlayerHand({
         {placedCardsOrTimers.map((cardOrTimer) =>
           "suit" in cardOrTimer ? (
             <Card
-              style={{
-                boxShadow:
-                  cardOrTimer.placement >= numOfCards ? "0 0 5px red" : "",
-              }}
+              style={
+                cardOrTimer.placement >= numOfCards ? punishmentCardStyling : {}
+              }
               key={cardOrTimer.placement}
               onClick={(e) => {
                 handleLeftClick(e, cardOrTimer);
