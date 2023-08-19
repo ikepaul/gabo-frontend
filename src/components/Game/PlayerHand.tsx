@@ -2,13 +2,14 @@ import Card from "../Card/Card";
 import { CardTimer, GameCard, Player } from "./GameClass";
 import CSS from "csstype";
 
-type Placement = "top" | "right" | "bottom" | "left";
+export type Placement = "top" | "right" | "bottom" | "left";
 
 interface PlacementStyling {
   top: string | number;
   right: string | number;
   bottom: string | number;
   left: string | number;
+  transform: string;
 }
 
 interface PlayerHandProps {
@@ -35,6 +36,7 @@ export default function PlayerHand({
     bottom: "auto",
     left: "auto",
     right: "auto",
+    transform: "",
   };
 
   switch (placement) {
@@ -44,9 +46,10 @@ export default function PlayerHand({
       placementStyling.right = 0;
       break;
     case "right":
-      placementStyling.bottom = "10px";
-      placementStyling.left = 0;
-      placementStyling.right = 0;
+      placementStyling.right = "5%";
+      placementStyling.top = "50%";
+      placementStyling.bottom = "50%";
+      placementStyling.transform = "rotate(-90deg)";
       break;
     case "bottom":
       placementStyling.bottom = "10px";
@@ -54,9 +57,10 @@ export default function PlayerHand({
       placementStyling.right = 0;
       break;
     case "left":
-      placementStyling.bottom = "10px";
-      placementStyling.left = 0;
-      placementStyling.right = 0;
+      placementStyling.left = "10%";
+      placementStyling.top = "50%";
+      placementStyling.bottom = "50%";
+      placementStyling.transform = "rotate(90deg)";
       break;
   }
 

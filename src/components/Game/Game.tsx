@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import CardClass from "./../Card/CardClass";
-import PlayerHand from "./PlayerHand";
+import PlayerHand, { Placement } from "./PlayerHand";
 import { Socket } from "socket.io-client";
 import { GameCard, GameClass, InfoGive, Player } from "./GameClass";
 import Card from "../Card/Card";
@@ -200,7 +200,6 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
 
           setGame((oldGame) => {
             if (oldGame) {
-              setDrawnCard(undefined);
               return { ...oldGame, players };
             }
             return undefined;
@@ -236,7 +235,6 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
 
       setGame((oldGame) => {
         if (oldGame) {
-          setDrawnCard(undefined);
           return { ...oldGame, players };
         }
         return undefined;
@@ -433,8 +431,19 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           numOfCards={game.numOfCards}
         />
       )}
-      {opponents?.map((opponent) => {
+      {opponents?.map((opponent, i) => {
         const gives = availableGives.filter((ag) => ag.ownerId === opponent.id);
+        let placement: Placement = "top";
+
+        if (opponents.length == 1) {
+          placement = "top";
+        }
+        if (opponents.length == 2) {
+          placement = i === 0 ? "left" : "right";
+        }
+        if (opponents.length == 3) {
+          placement = i === 0 ? "left" : i === 1 ? "top" : "right";
+        }
 
         return (
           opponent && (
@@ -445,7 +454,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
                 maxTime: ag.maxTime,
               }))}
               key={opponent.id}
-              placement={"top"}
+              placement={placement}
               handleLeftClick={(e, c) => handleCardClick(e, c, opponent.id)}
               handleRightClick={(e, c) => handleCardClick(e, c, opponent.id)}
               player={opponent}
