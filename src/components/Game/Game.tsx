@@ -17,6 +17,15 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   const [game, setGame] = useState<GameClass>();
   const [drawnCard, setDrawnCard] = useState<CardClass>();
   const [availableGives, setAvailableGives] = useState<InfoGive[]>([]);
+
+  useEffect(() => {
+    socket?.emit("get-game", gameId, (newGame: GameClass) => {
+      console.log(newGame);
+      setGame({ ...newGame });
+      setDrawnCard(undefined);
+    });
+  }, [gameId]);
+
   useEffect(() => {
     const DELAY = 50;
     if (availableGives.length > 0) {
@@ -48,6 +57,16 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       setGame((oldGame) => {
         if (oldGame) {
           return { ...oldGame, players: updatedPlayers, activePlayerId };
+        }
+
+        return undefined;
+      });
+    };
+
+    const handlePlayerJoined = (newPlayer: Player) => {
+      setGame((oldGame) => {
+        if (oldGame) {
+          return { ...oldGame, players: [...oldGame.players, newPlayer] };
         }
 
         return undefined;
@@ -123,7 +142,6 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
 
           setGame((oldGame) => {
             if (oldGame) {
-              setDrawnCard(undefined);
               return { ...oldGame, players, topCard };
             }
             return undefined;
@@ -227,6 +245,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
 
     socket?.on("game-setup", handleGameSetup);
     socket?.on("player-left", handlePlayerLeft);
+    socket?.on("player-joined", handlePlayerJoined);
     socket?.on("hand-card-swap", handleHandCardSwap);
     socket?.on("update-timer-give", handleUpdateTimerGive);
     socket?.on("card-flip", handleCardFlip);
@@ -240,6 +259,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     return () => {
       socket?.removeListener("game-setup", handleGameSetup);
       socket?.removeListener("player-left", handlePlayerLeft);
+      socket?.removeListener("player-joined", handlePlayerJoined);
       socket?.removeListener("hand-card-swap", handleHandCardSwap);
       socket?.removeListener("update-timer-give", handleUpdateTimerGive);
       socket?.removeListener("card-flip", handleCardFlip);
@@ -327,7 +347,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           }}
           style={{ position: "absolute", top: "5px", left: "5px", zIndex: 1 }}
         >
-          {gameId}
+          COPY GAME ID
         </div>
         <button
           style={{ position: "absolute", top: "40px", left: "5px", zIndex: 1 }}
@@ -350,6 +370,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   return (
     <div>
       <button
+        style={{ position: "absolute", top: "40px", right: "5px", zIndex: 1 }}
         onClick={() => {
           console.log(game);
           console.log(playerCards);
@@ -357,16 +378,21 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           console.log(socket?.id);
         }}
       >
-        LOG GAME HERE
+        LOG
       </button>
-      <button onClick={restartGame}>Restart Game</button>
+      <button
+        style={{ position: "absolute", top: "5px", right: "5px", zIndex: 1 }}
+        onClick={restartGame}
+      >
+        {game.state === "Waiting" ? "Start Game" : "Restart Game"}
+      </button>
       <div
         onClick={() => {
           navigator.clipboard.writeText(gameId);
         }}
         style={{ position: "absolute", top: "5px", left: "5px", zIndex: 1 }}
       >
-        {gameId}
+        COPY GAME ID
       </div>
       <button
         style={{ position: "absolute", top: "40px", left: "5px", zIndex: 1 }}

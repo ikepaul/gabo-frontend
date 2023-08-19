@@ -17,6 +17,7 @@
 - Being able to look at a select few of your own cards at the beginning of the game.
 - Card abilities
 - Lobby where players can wait for other players to join and then start when they feel like it.
+- UI doesnt support more than 1 player and isnt clean.
 
 # React + TypeScript + Vite
 

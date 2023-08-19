@@ -8,6 +8,7 @@ function App() {
   const [gameId, setGameId] = useState<string>("");
   const [inputGameId, setInputGameId] = useState<string>("");
   const [numOfCards, setNumOfCards] = useState<number>(4);
+  const [playerLimit, setPlayerLimit] = useState<number>(4);
 
   useEffect(() => {
     const socket = io("localhost:3000");
@@ -35,7 +36,7 @@ function App() {
   };
 
   const createGame = () => {
-    socket?.emit("create-game", numOfCards, (id: string) => {
+    socket?.emit("create-game", numOfCards, playerLimit, (id: string) => {
       setGameId(id);
     });
   };
@@ -58,6 +59,8 @@ function App() {
 
   const maxNumOfCards = 8;
   const minNumOfCards = 1;
+  const maxPlayerLimit = 4;
+  const minPlayerLimit = 1;
 
   return (
     <div>
@@ -65,6 +68,7 @@ function App() {
         <div>
           <div>
             <button onClick={createGame}>Create Game</button>
+            Number of cards:
             <input
               type="number"
               value={numOfCards}
@@ -82,6 +86,28 @@ function App() {
                   val = minNumOfCards;
                 }
                 setNumOfCards(val);
+              }}
+              id=""
+            />
+            Player limit:
+            <input
+              placeholder="Player Limit"
+              type="number"
+              value={playerLimit}
+              min={minPlayerLimit}
+              max={maxPlayerLimit}
+              onChange={(e) => {
+                let val = parseInt(e.target.value);
+                if (isNaN(val)) {
+                  val = minPlayerLimit;
+                }
+                if (val > maxPlayerLimit) {
+                  val = maxPlayerLimit;
+                }
+                if (val < minPlayerLimit) {
+                  val = minPlayerLimit;
+                }
+                setPlayerLimit(val);
               }}
               id=""
             />
