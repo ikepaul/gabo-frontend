@@ -11,12 +11,13 @@
 - Multiple games taking part at the same time, you can join a game by id.
 - Punishment cards for an incorrect flip.
 - Choosing how many cards you wish to play with.
+- Lobby where players can wait for other players to join and then start when they feel like it.
 
 ## Missing Features
 - Hidden cards
 - Being able to look at a select few of your own cards at the beginning of the game.
 - Card abilities
-- Lobby where players can wait for other players to join and then start when they feel like it.
+- Being able to spectate. (If you join an ongoing game you get to play instantly but with no cards. Not good )
 - UI doesnt support more than 1 player and isnt clean.
 
 # React + TypeScript + Vite
