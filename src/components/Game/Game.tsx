@@ -22,7 +22,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   const [activeAbility, setActiveAbility] = useState<Ability | "">("");
 
   useEffect(() => {
-    socket?.emit("get-game", gameId, (newGame: GameClass) => {
+    socket?.emit("getGame", gameId, (newGame: GameClass) => {
       console.log(newGame);
       setGame({ ...newGame });
       setDrawnCard(undefined);
@@ -173,6 +173,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     };
 
     const handleUpdateTopCard = (topCard: CardClass) => {
+      console.log(topCard);
       setGame((oldGame) => {
         if (oldGame) {
           return { ...oldGame, topCard };
@@ -259,36 +260,36 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       setActiveAbility(ability);
     };
 
-    socket?.on("game-setup", handleGameSetup);
-    socket?.on("player-left", handlePlayerLeft);
-    socket?.on("player-joined", handlePlayerJoined);
-    socket?.on("spectator-added", handleSpectatorAdded);
-    socket?.on("hand-card-swap", handleHandCardSwap);
-    socket?.on("update-timer-give", handleUpdateTimerGive);
-    socket?.on("card-flip", handleCardFlip);
-    socket?.on("draw-from-deck", handleDrawFromDeck);
-    socket?.on("update-topcard", handleUpdateTopCard);
-    socket?.on("timeout-give", handleTimeoutGive);
-    socket?.on("give-card", handleGiveCard);
-    socket?.on("end-turn", handleEndTurn);
-    socket?.on("punishment-card", handlePunishmentCard);
-    socket?.on("use-ability", handleUseAbility);
+    socket?.on("gameSetup", handleGameSetup);
+    socket?.on("playerLeft", handlePlayerLeft);
+    socket?.on("playerJoined", handlePlayerJoined);
+    socket?.on("spectatorAdded", handleSpectatorAdded);
+    socket?.on("handCardSwap", handleHandCardSwap);
+    socket?.on("updateTimerGive", handleUpdateTimerGive);
+    socket?.on("cardFlip", handleCardFlip);
+    socket?.on("drawFromDeck", handleDrawFromDeck);
+    socket?.on("updateTopCard", handleUpdateTopCard);
+    socket?.on("timeoutGive", handleTimeoutGive);
+    socket?.on("giveCard", handleGiveCard);
+    socket?.on("endTurn", handleEndTurn);
+    socket?.on("punishmentCard", handlePunishmentCard);
+    socket?.on("useAbility", handleUseAbility);
 
     return () => {
-      socket?.removeListener("game-setup", handleGameSetup);
-      socket?.removeListener("player-left", handlePlayerLeft);
-      socket?.removeListener("player-joined", handlePlayerJoined);
-      socket?.removeListener("spectator-added", handleSpectatorAdded);
-      socket?.removeListener("hand-card-swap", handleHandCardSwap);
-      socket?.removeListener("update-timer-give", handleUpdateTimerGive);
-      socket?.removeListener("card-flip", handleCardFlip);
-      socket?.removeListener("draw-from-deck", handleDrawFromDeck);
-      socket?.removeListener("update-topcard", handleUpdateTopCard);
-      socket?.removeListener("timeout-give", handleTimeoutGive);
-      socket?.removeListener("give-card", handleGiveCard);
-      socket?.removeListener("end-turn", handleEndTurn);
-      socket?.removeListener("punishment-card", handlePunishmentCard);
-      socket?.removeListener("use-ability", handleUseAbility);
+      socket?.removeListener("gameSetup", handleGameSetup);
+      socket?.removeListener("playerLeft", handlePlayerLeft);
+      socket?.removeListener("playerJoined", handlePlayerJoined);
+      socket?.removeListener("spectatorAdded", handleSpectatorAdded);
+      socket?.removeListener("handCardSwap", handleHandCardSwap);
+      socket?.removeListener("updateTimerGive", handleUpdateTimerGive);
+      socket?.removeListener("cardFlip", handleCardFlip);
+      socket?.removeListener("drawFromDeck", handleDrawFromDeck);
+      socket?.removeListener("updateTopCard", handleUpdateTopCard);
+      socket?.removeListener("timeoutGive", handleTimeoutGive);
+      socket?.removeListener("giveCard", handleGiveCard);
+      socket?.removeListener("endTurn", handleEndTurn);
+      socket?.removeListener("punishmentCard", handlePunishmentCard);
+      socket?.removeListener("useAbility", handleUseAbility);
     };
   }, [socket, game, game?.players, game?.topCard, game?.activePlayerId]);
 
@@ -316,7 +317,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     e.preventDefault();
     if (e.nativeEvent.button === 2) {
       //Right click
-      socket?.emit("card-flip", gameId, card, ownerId, (maxTime: number) => {
+      socket?.emit("cardFlip", gameId, card, ownerId, (maxTime: number) => {
         if (ownerId !== socket.id) {
           //Flipped an opponents card
           setAvailableGives((prev) => [
@@ -334,24 +335,19 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       //Left click
       if (ownerId === socket?.id) {
         if (availableGives.length > 0) {
-          socket.emit("give-card", gameId, card.placement);
+          socket.emit("giveCard", gameId, card.placement);
         } else if (drawnCard) {
-          socket.emit("hand-card-swap", gameId, card.placement);
+          socket.emit("handCardSwap", gameId, card.placement);
         } else if (activeAbility == "look-self") {
-          socket.emit(
-            "look-self",
-            gameId,
-            card.placement,
-            (card: CardClass) => {
-              console.log(card);
-              setActiveAbility("");
-            }
-          );
+          socket.emit("lookSelf", gameId, card.placement, (card: CardClass) => {
+            console.log(card);
+            setActiveAbility("");
+          });
         }
       } else {
         if (activeAbility == "look-other") {
           socket?.emit(
-            "look-other",
+            "lookOther",
             gameId,
             ownerId,
             card.placement,
@@ -367,13 +363,13 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   const handleTopCardClick = () => {
     if (game && game.activePlayerId === socket?.id) {
       if (drawnCard) {
-        socket.emit("put-on-pile", gameId, () => {
+        socket.emit("putOnPile", gameId, () => {
           setDrawnCard(undefined);
         });
       } else {
         if (game.topCard) {
           socket.emit(
-            "draw-from-pile",
+            "drawFromPile",
             gameId,
             (pickedUpCard: CardClass, newTopCard: CardClass) => {
               setDrawnCard(pickedUpCard);
@@ -391,13 +387,13 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
 
   const drawCard = () => {
     if (!drawnCard) {
-      socket?.emit("draw-from-deck", gameId, (card: CardClass) => {
+      socket?.emit("drawFromDeck", gameId, (card: CardClass) => {
         setDrawnCard(card);
       });
     }
   };
   const restartGame = () => {
-    socket?.emit("RestartGame", gameId);
+    socket?.emit("restartGame", gameId);
   };
 
   if (game === undefined || socket === undefined) {

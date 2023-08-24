@@ -28,20 +28,20 @@ function App() {
   }, []);
 
   const leaveGame = () => {
-    socket?.emit("leave-game", gameId, (res: string) => {
+    socket?.emit("leaveGame", gameId, (res: string) => {
       console.log(res);
       setGameId("");
     });
   };
 
   const createGame = () => {
-    socket?.emit("create-game", numOfCards, playerLimit, (id: string) => {
+    socket?.emit("createGame", numOfCards, playerLimit, (id: string) => {
       setGameId(id);
     });
   };
 
   const joinGame = () => {
-    socket?.emit("join-game", inputGameId, (status: string) => {
+    socket?.emit("joinGame", inputGameId, (status: string) => {
       if (status == "404") {
         return;
       }
