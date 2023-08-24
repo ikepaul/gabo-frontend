@@ -20,10 +20,15 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   const [drawnCard, setDrawnCard] = useState<CardClass>();
   const [availableGives, setAvailableGives] = useState<InfoGive[]>([]);
   const [activeAbility, setActiveAbility] = useState<Ability | "">("");
+  const [[myCardToSwap, theirCardToSwap], setCardsToSwap] = useState<
+    [
+      { ownerId: string; placement: number } | undefined,
+      { ownerId: string; placement: number } | undefined
+    ]
+  >([undefined, undefined]);
 
   useEffect(() => {
     socket?.emit("getGame", gameId, (newGame: GameClass) => {
-      console.log(newGame);
       setGame({ ...newGame });
       setDrawnCard(undefined);
     });
@@ -48,7 +53,6 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
 
   useEffect(() => {
     const handleGameSetup = (newGame: GameClass) => {
-      console.log(newGame);
       setGame({ ...newGame });
       setDrawnCard(undefined);
     };
@@ -183,7 +187,6 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     };
 
     const handleUpdateTopCard = (topCard: CardClass) => {
-      console.log(topCard);
       setGame((oldGame) => {
         if (oldGame) {
           return { ...oldGame, topCard };
@@ -270,6 +273,73 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       setActiveAbility(ability);
     };
 
+    const handleCardSwap = (
+      playerPlacement: { ownerId: string; placement: number },
+      opponentPlacement: { ownerId: string; placement: number }
+    ) => {
+      setGame((prev) => {
+        if (prev === undefined) {
+          return prev;
+        }
+
+        const newGame = { ...prev };
+        newGame.players = newGame.players.map((p) => {
+          const cards = p.cards.map((c) => ({ ...c }));
+          return { ...p, cards };
+        });
+
+        const playerIndex = newGame.players.findIndex(
+          (p) => p.id == playerPlacement.ownerId
+        );
+        const opponentIndex = newGame.players.findIndex(
+          (p) => p.id == opponentPlacement.ownerId
+        );
+
+        if (playerIndex === -1 || opponentIndex === -1) {
+          return prev;
+        }
+        const playerCardIndex = newGame.players[playerIndex].cards.findIndex(
+          (c) => c.placement === playerPlacement.placement
+        );
+        const opponentCardIndex = newGame.players[
+          opponentIndex
+        ].cards.findIndex((c) => c.placement === opponentPlacement.placement);
+
+        if (playerCardIndex === -1 || opponentCardIndex === -1) {
+          return prev;
+        }
+
+        let playerCard: GameCard | undefined,
+          opponentCard: GameCard | undefined;
+
+        const newPlayers = newGame.players.map((p) => {
+          const tempCards = p.cards.map((c) => ({ ...c }));
+          const tempP = { ...p, cards: tempCards };
+
+          if (p.id === playerPlacement.ownerId) {
+            [playerCard] = tempP.cards.splice(playerCardIndex, 1);
+          }
+          if (p.id === opponentPlacement.ownerId) {
+            [opponentCard] = tempP.cards.splice(opponentCardIndex, 1);
+          }
+          return { ...tempP };
+        });
+
+        if (playerCard && opponentCard) {
+          const temp = opponentCard.placement;
+          opponentCard.placement = playerCard.placement;
+          playerCard.placement = temp;
+
+          newPlayers[playerIndex].cards.push(opponentCard);
+          newPlayers[opponentIndex].cards.push(playerCard);
+
+          return { ...newGame, players: newPlayers };
+        } else {
+          return prev;
+        }
+      });
+    };
+
     socket?.on("gameSetup", handleGameSetup);
     socket?.on("playerLeft", handlePlayerLeft);
     socket?.on("spectatorLeft", handleSpectatorLeft);
@@ -285,6 +355,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     socket?.on("endTurn", handleEndTurn);
     socket?.on("punishmentCard", handlePunishmentCard);
     socket?.on("useAbility", handleUseAbility);
+    socket?.on("cardSwap", handleCardSwap);
 
     return () => {
       socket?.removeListener("gameSetup", handleGameSetup);
@@ -302,6 +373,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       socket?.removeListener("endTurn", handleEndTurn);
       socket?.removeListener("punishmentCard", handlePunishmentCard);
       socket?.removeListener("useAbility", handleUseAbility);
+      socket?.removeListener("cardSwap", handleCardSwap);
     };
   }, [socket, game, game?.players, game?.topCard, game?.activePlayerId]);
 
@@ -314,6 +386,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         console.log("LOOK-OTHER");
         break;
       case "swap-then-look":
+        console.log("SWAP-THEN-LOOK");
         break;
       case "look-then-swap":
         break;
@@ -321,6 +394,24 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         break;
     }
   }, [activeAbility]);
+
+  useEffect(() => {
+    if (myCardToSwap !== undefined && theirCardToSwap !== undefined) {
+      socket?.emit(
+        "swapThenLook",
+        gameId,
+        myCardToSwap,
+        theirCardToSwap,
+        (receivedCard: GameCard) => {
+          console.log(receivedCard);
+          setActiveAbility("");
+        }
+      );
+      setCardsToSwap([undefined, undefined]);
+    }
+  }, [myCardToSwap, theirCardToSwap]);
+
+  //Lots of if, please structure in different way.
   const handleCardClick = (
     e: React.MouseEvent<HTMLElement>,
     card: GameCard,
@@ -355,6 +446,11 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
             console.log(card);
             setActiveAbility("");
           });
+        } else if (activeAbility == "swap-then-look") {
+          setCardsToSwap(([, their]) => [
+            { ownerId: socket.id, placement: card.placement },
+            their,
+          ]);
         }
       } else {
         if (activeAbility == "look-other") {
@@ -365,8 +461,14 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
             card.placement,
             (card: CardClass) => {
               console.log(card);
+              setActiveAbility("");
             }
           );
+        } else if (activeAbility == "swap-then-look") {
+          setCardsToSwap(([my]) => [
+            my,
+            { ownerId, placement: card.placement },
+          ]);
         }
       }
     }
@@ -437,7 +539,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     <div>
       <ul style={{ position: "absolute", right: "20px", bottom: "10px" }}>
         {game.spectators.map((s) => (
-          <li>
+          <li key={s}>
             {s}
             {s == socket.id && " (you) "}
           </li>
@@ -492,11 +594,17 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           return (
             <PlayerHand
               seating={"bottom"}
+              key={player.id}
               handleLeftClick={(e, c) => handleCardClick(e, c, player.id)}
               handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
               player={player}
               isActivePlayer={game.activePlayerId === player.id}
               numOfCards={game.numOfCards}
+              selectedCard={
+                player.id === theirCardToSwap?.ownerId
+                  ? theirCardToSwap.placement
+                  : undefined
+              }
             />
           );
         }
@@ -523,6 +631,11 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
             player={player}
             isActivePlayer={game.activePlayerId === player.id}
             numOfCards={game.numOfCards}
+            selectedCard={
+              player.id === theirCardToSwap?.ownerId
+                ? theirCardToSwap.placement
+                : undefined
+            }
           />
         );
       })}

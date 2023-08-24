@@ -1,5 +1,4 @@
-
-# GABO 
+# GABO
 
 ## Current Features
 
@@ -15,9 +14,10 @@
 - Spectating. When you join a lobby you're initially placed in spectator. If the game starts/restarts as many players as possible from spectators automatically join the game.
 
 ## Missing Features
+
 - Hidden cards
 - Being able to look at a select few of your own cards at the beginning of the game.
-- Card abilities
+- Card abilities (Only missing king ability)
 - UI support for more than 4 players.
 - Current score for players.
 - Player order should be reflected in their position around the "table".
@@ -51,5 +51,3 @@ If you are developing a production application, we recommend updating the config
 - Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
 - Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
 - Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
-
-

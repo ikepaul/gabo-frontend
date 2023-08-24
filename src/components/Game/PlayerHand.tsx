@@ -20,6 +20,7 @@ interface PlayerHandProps {
   seating?: Seating;
   isActivePlayer?: boolean;
   timers?: CardTimer[];
+  selectedCard?: number;
 }
 
 export default function PlayerHand({
@@ -30,6 +31,7 @@ export default function PlayerHand({
   seating = "bottom",
   isActivePlayer = false,
   timers = [],
+  selectedCard = -1,
 }: PlayerHandProps) {
   const placementStyling: SeatingStyling = {
     top: "auto",
@@ -73,6 +75,10 @@ export default function PlayerHand({
     border: "1px dashed crimson",
   };
 
+  const selectedCardStyling = {
+    border: "2px dashed lime",
+  };
+
   return (
     <div
       style={{
@@ -87,7 +93,11 @@ export default function PlayerHand({
           "suit" in cardOrTimer ? (
             <Card
               style={
-                cardOrTimer.placement >= numOfCards ? punishmentCardStyling : {}
+                cardOrTimer.placement == selectedCard
+                  ? selectedCardStyling
+                  : cardOrTimer.placement >= numOfCards
+                  ? punishmentCardStyling
+                  : {}
               }
               key={cardOrTimer.placement}
               onClick={(e) => {
