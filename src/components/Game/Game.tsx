@@ -66,6 +66,16 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       });
     };
 
+    const handleSpectatorLeft = (updatedSpectators: string[]) => {
+      setGame((oldGame) => {
+        if (oldGame) {
+          return { ...oldGame, spectators: updatedSpectators };
+        }
+
+        return undefined;
+      });
+    };
+
     const handlePlayerJoined = (newPlayer: Player) => {
       setGame((oldGame) => {
         if (oldGame) {
@@ -262,6 +272,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
 
     socket?.on("gameSetup", handleGameSetup);
     socket?.on("playerLeft", handlePlayerLeft);
+    socket?.on("spectatorLeft", handleSpectatorLeft);
     socket?.on("playerJoined", handlePlayerJoined);
     socket?.on("spectatorAdded", handleSpectatorAdded);
     socket?.on("handCardSwap", handleHandCardSwap);
@@ -278,6 +289,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     return () => {
       socket?.removeListener("gameSetup", handleGameSetup);
       socket?.removeListener("playerLeft", handlePlayerLeft);
+      socket?.removeListener("spectatorLeft", handleSpectatorLeft);
       socket?.removeListener("playerJoined", handlePlayerJoined);
       socket?.removeListener("spectatorAdded", handleSpectatorAdded);
       socket?.removeListener("handCardSwap", handleHandCardSwap);
