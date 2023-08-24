@@ -13,10 +13,13 @@ interface GameProps {
   leaveGame: () => void;
 }
 
+type Ability = "look-self" | "look-other" | "swap-then-look" | "look-then-swap";
+
 export default function Game({ socket, gameId, leaveGame }: GameProps) {
   const [game, setGame] = useState<GameClass>();
   const [drawnCard, setDrawnCard] = useState<CardClass>();
   const [availableGives, setAvailableGives] = useState<InfoGive[]>([]);
+  const [activeAbility, setActiveAbility] = useState<Ability | "">("");
 
   useEffect(() => {
     socket?.emit("get-game", gameId, (newGame: GameClass) => {
@@ -252,6 +255,10 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       });
     };
 
+    const handleUseAbility = (ability: Ability) => {
+      setActiveAbility(ability);
+    };
+
     socket?.on("game-setup", handleGameSetup);
     socket?.on("player-left", handlePlayerLeft);
     socket?.on("player-joined", handlePlayerJoined);
@@ -265,6 +272,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     socket?.on("give-card", handleGiveCard);
     socket?.on("end-turn", handleEndTurn);
     socket?.on("punishment-card", handlePunishmentCard);
+    socket?.on("use-ability", handleUseAbility);
 
     return () => {
       socket?.removeListener("game-setup", handleGameSetup);
@@ -280,9 +288,26 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       socket?.removeListener("give-card", handleGiveCard);
       socket?.removeListener("end-turn", handleEndTurn);
       socket?.removeListener("punishment-card", handlePunishmentCard);
+      socket?.removeListener("use-ability", handleUseAbility);
     };
   }, [socket, game, game?.players, game?.topCard, game?.activePlayerId]);
 
+  useEffect(() => {
+    switch (activeAbility) {
+      case "look-self":
+        console.log("LOOK-SELF");
+        break;
+      case "look-other":
+        console.log("LOOK-OTHER");
+        break;
+      case "swap-then-look":
+        break;
+      case "look-then-swap":
+        break;
+      default:
+        break;
+    }
+  }, [activeAbility]);
   const handleCardClick = (
     e: React.MouseEvent<HTMLElement>,
     card: GameCard,
@@ -290,6 +315,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   ) => {
     e.preventDefault();
     if (e.nativeEvent.button === 2) {
+      //Right click
       socket?.emit("card-flip", gameId, card, ownerId, (maxTime: number) => {
         if (ownerId !== socket.id) {
           //Flipped an opponents card
@@ -305,10 +331,35 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         }
       });
     } else {
-      if (availableGives.length > 0 && ownerId === socket?.id) {
-        socket.emit("give-card", gameId, card.placement);
-      } else if (drawnCard && ownerId === socket?.id) {
-        socket.emit("hand-card-swap", gameId, card.placement);
+      //Left click
+      if (ownerId === socket?.id) {
+        if (availableGives.length > 0) {
+          socket.emit("give-card", gameId, card.placement);
+        } else if (drawnCard) {
+          socket.emit("hand-card-swap", gameId, card.placement);
+        } else if (activeAbility == "look-self") {
+          socket.emit(
+            "look-self",
+            gameId,
+            card.placement,
+            (card: CardClass) => {
+              console.log(card);
+              setActiveAbility("");
+            }
+          );
+        }
+      } else {
+        if (activeAbility == "look-other") {
+          socket?.emit(
+            "look-other",
+            gameId,
+            ownerId,
+            card.placement,
+            (card: CardClass) => {
+              console.log(card);
+            }
+          );
+        }
       }
     }
   };

@@ -22,6 +22,7 @@
 - Current score for players.
 - Player order should be reflected in their position around the "table".
 - Players should have names shown instead of socket id.
+- Support for keyboard as input instead of mouse.
 
 # React + TypeScript + Vite
 
