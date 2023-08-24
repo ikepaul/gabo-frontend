@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Game from "./components/Game/Game";
 import { Socket, io } from "socket.io-client";
-import { Player } from "./components/Game/GameClass";
 
 function App() {
   const [socket, setSocket] = useState<Socket>();
@@ -42,19 +41,14 @@ function App() {
   };
 
   const joinGame = () => {
-    socket?.emit(
-      "join-game",
-      inputGameId,
-      (playersOrError: Player[] | "404" | "Full") => {
-        if (playersOrError == "Full") {
-          return;
-        }
-        if (playersOrError == "404") {
-          return;
-        }
+    socket?.emit("join-game", inputGameId, (status: string) => {
+      if (status == "404") {
+        return;
+      }
+      if (status == "ok") {
         setGameId(inputGameId);
       }
-    );
+    });
   };
 
   const maxNumOfCards = 8;

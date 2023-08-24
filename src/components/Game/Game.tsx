@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import CardClass from "./../Card/CardClass";
-import PlayerHand, { Placement } from "./PlayerHand";
+import PlayerHand, { Seating } from "./PlayerHand";
 import { Socket } from "socket.io-client";
 import { GameCard, GameClass, InfoGive, Player } from "./GameClass";
 import Card from "../Card/Card";
@@ -70,6 +70,17 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         }
 
         return undefined;
+      });
+    };
+
+    const handleSpectatorAdded = (spectatorId: string) => {
+      setGame((prev) => {
+        if (!prev) {
+          return prev;
+        }
+        const spectators = [...prev.spectators];
+        spectators.push(spectatorId);
+        return { ...prev, spectators };
       });
     };
 
@@ -244,6 +255,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     socket?.on("game-setup", handleGameSetup);
     socket?.on("player-left", handlePlayerLeft);
     socket?.on("player-joined", handlePlayerJoined);
+    socket?.on("spectator-added", handleSpectatorAdded);
     socket?.on("hand-card-swap", handleHandCardSwap);
     socket?.on("update-timer-give", handleUpdateTimerGive);
     socket?.on("card-flip", handleCardFlip);
@@ -258,6 +270,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       socket?.removeListener("game-setup", handleGameSetup);
       socket?.removeListener("player-left", handlePlayerLeft);
       socket?.removeListener("player-joined", handlePlayerJoined);
+      socket?.removeListener("spectator-added", handleSpectatorAdded);
       socket?.removeListener("hand-card-swap", handleHandCardSwap);
       socket?.removeListener("update-timer-give", handleUpdateTimerGive);
       socket?.removeListener("card-flip", handleCardFlip);
@@ -336,7 +349,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     socket?.emit("RestartGame", gameId);
   };
 
-  if (game === undefined) {
+  if (game === undefined || socket === undefined) {
     return (
       <div>
         <div
@@ -358,26 +371,19 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     );
   }
 
-  const player = game.players.find((p) => p.id === socket?.id);
-  const playerCards = player?.cards;
-  const punishmentCards =
-    game === undefined
-      ? 0
-      : player?.cards.filter((c) => c.placement >= game.numOfCards);
-  const opponents = game.players.filter((p) => p.id !== socket?.id);
+  const isSpectating = game.spectators.includes(socket.id);
+  const seatings: Seating[] = ["top", "right", "left"];
+
   return (
     <div>
-      <button
-        style={{ position: "absolute", top: "40px", right: "5px", zIndex: 1 }}
-        onClick={() => {
-          console.log(game);
-          console.log(playerCards);
-          console.log(punishmentCards);
-          console.log(socket?.id);
-        }}
-      >
-        LOG
-      </button>
+      <ul style={{ position: "absolute", right: "20px", bottom: "10px" }}>
+        {game.spectators.map((s) => (
+          <li>
+            {s}
+            {s == socket.id && " (you) "}
+          </li>
+        ))}
+      </ul>
       <button
         style={{ position: "absolute", top: "5px", right: "5px", zIndex: 1 }}
         onClick={restartGame}
@@ -422,46 +428,43 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           onClick={handleTopCardClick}
         />
       )}
-      {playerCards && (
-        <PlayerHand
-          handleLeftClick={(e, c) => handleCardClick(e, c, player.id)}
-          handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
-          player={player}
-          isActivePlayer={game.activePlayerId === player.id}
-          numOfCards={game.numOfCards}
-        />
-      )}
-      {opponents?.map((opponent, i) => {
-        const gives = availableGives.filter((ag) => ag.ownerId === opponent.id);
-        let placement: Placement = "top";
-
-        if (opponents.length == 1) {
-          placement = "top";
-        }
-        if (opponents.length == 2) {
-          placement = i === 0 ? "left" : "right";
-        }
-        if (opponents.length == 3) {
-          placement = i === 0 ? "left" : i === 1 ? "top" : "right";
-        }
-
-        return (
-          opponent && (
+      {game.players?.map((player, i) => {
+        if (player.id === socket?.id) {
+          return (
             <PlayerHand
-              timers={gives.map((ag) => ({
-                placement: ag.placement,
-                time: ag.time,
-                maxTime: ag.maxTime,
-              }))}
-              key={opponent.id}
-              placement={placement}
-              handleLeftClick={(e, c) => handleCardClick(e, c, opponent.id)}
-              handleRightClick={(e, c) => handleCardClick(e, c, opponent.id)}
-              player={opponent}
-              isActivePlayer={game.activePlayerId === opponent.id}
+              seating={"bottom"}
+              handleLeftClick={(e, c) => handleCardClick(e, c, player.id)}
+              handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
+              player={player}
+              isActivePlayer={game.activePlayerId === player.id}
               numOfCards={game.numOfCards}
             />
-          )
+          );
+        }
+        const gives = availableGives.filter((ag) => ag.ownerId === player.id);
+
+        let placement = seatings.shift();
+        if (isSpectating && game.players.length == 2 && i === 1) {
+          placement = "bottom";
+        }
+        if (placement === undefined) {
+          placement = "bottom";
+        }
+        return (
+          <PlayerHand
+            timers={gives.map((ag) => ({
+              placement: ag.placement,
+              time: ag.time,
+              maxTime: ag.maxTime,
+            }))}
+            key={player.id}
+            seating={placement}
+            handleLeftClick={(e, c) => handleCardClick(e, c, player.id)}
+            handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
+            player={player}
+            isActivePlayer={game.activePlayerId === player.id}
+            numOfCards={game.numOfCards}
+          />
         );
       })}
     </div>

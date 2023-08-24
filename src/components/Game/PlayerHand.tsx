@@ -2,9 +2,9 @@ import Card from "../Card/Card";
 import { CardTimer, GameCard, Player } from "./GameClass";
 import CSS from "csstype";
 
-export type Placement = "top" | "right" | "bottom" | "left";
+export type Seating = "top" | "right" | "bottom" | "left";
 
-interface PlacementStyling {
+interface SeatingStyling {
   top: string | number;
   right: string | number;
   bottom: string | number;
@@ -17,7 +17,7 @@ interface PlayerHandProps {
   handleLeftClick: (e: React.MouseEvent<HTMLElement>, a: GameCard) => void;
   handleRightClick: (e: React.MouseEvent<HTMLElement>, a: GameCard) => void;
   numOfCards: number; //Number of cards each player starts with
-  placement?: Placement;
+  seating?: Seating;
   isActivePlayer?: boolean;
   timers?: CardTimer[];
 }
@@ -27,11 +27,11 @@ export default function PlayerHand({
   handleLeftClick,
   handleRightClick,
   numOfCards,
-  placement = "bottom",
+  seating = "bottom",
   isActivePlayer = false,
   timers = [],
 }: PlayerHandProps) {
-  const placementStyling: PlacementStyling = {
+  const placementStyling: SeatingStyling = {
     top: "auto",
     bottom: "auto",
     left: "auto",
@@ -39,7 +39,7 @@ export default function PlayerHand({
     transform: "",
   };
 
-  switch (placement) {
+  switch (seating) {
     case "top":
       placementStyling.top = "10px";
       placementStyling.left = 0;

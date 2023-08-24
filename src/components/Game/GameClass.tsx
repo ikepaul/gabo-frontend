@@ -24,6 +24,7 @@ interface Player {
 type GameState = "Waiting" | "Playing" | "Finished";
 interface GameClass {
   players: Player[];
+  spectators: string[];
   state: GameState;
   activePlayerId: string;
   topCard: Card | undefined;
