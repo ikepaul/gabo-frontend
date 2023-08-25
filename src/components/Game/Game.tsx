@@ -120,8 +120,8 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
             <PlayerHand
               seating={"bottom"}
               key={player.id}
-              handleLeftClick={(e, c) => handleCardClick(e, c, player.id)}
-              handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
+              handleLeftClick={(e, c) => handleCardClick(e, c)}
+              handleRightClick={(e, c) => handleCardClick(e, c)}
               player={player}
               isActivePlayer={game.activePlayerId === player.id}
               cardToLookAt={
@@ -154,8 +154,8 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
             }))}
             key={player.id}
             seating={placement}
-            handleLeftClick={(e, c) => handleCardClick(e, c, player.id)}
-            handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
+            handleLeftClick={(e, c) => handleCardClick(e, c)}
+            handleRightClick={(e, c) => handleCardClick(e, c)}
             player={player}
             cardToLookAt={
               cardToLookAt?.ownerId === player.id ? cardToLookAt : undefined

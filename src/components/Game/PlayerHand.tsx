@@ -1,5 +1,5 @@
 import Card from "../Card/Card";
-import { CardTimer, GameCard, Player } from "./GameClass";
+import { CardTimer, GameCard, GameCardDTO, Player } from "./GameClass";
 import CSS from "csstype";
 
 export type Seating = "top" | "right" | "bottom" | "left";
@@ -14,8 +14,8 @@ interface SeatingStyling {
 
 interface PlayerHandProps {
   player: Player;
-  handleLeftClick: (e: React.MouseEvent<HTMLElement>, a: GameCard) => void;
-  handleRightClick: (e: React.MouseEvent<HTMLElement>, a: GameCard) => void;
+  handleLeftClick: (e: React.MouseEvent<HTMLElement>, a: GameCardDTO) => void;
+  handleRightClick: (e: React.MouseEvent<HTMLElement>, a: GameCardDTO) => void;
   numOfCards: number; //Number of cards each player starts with
   seating?: Seating;
   isActivePlayer?: boolean;
@@ -70,7 +70,7 @@ export default function PlayerHand({
       break;
   }
 
-  const placedCardsOrTimers: (GameCard | CardTimer)[] = [
+  const placedCardsOrTimers: (GameCardDTO | CardTimer)[] = [
     ...cards,
     ...timers,
   ].sort((a, b) => a.placement - b.placement);
@@ -94,7 +94,7 @@ export default function PlayerHand({
       {isActivePlayer && <div>Playing</div>}
       <div>
         {placedCardsOrTimers.map((cardOrTimer) =>
-          "suit" in cardOrTimer ? (
+          "ownerId" in cardOrTimer ? (
             <Card
               style={
                 cardOrTimer.placement == selectedCard
@@ -112,7 +112,7 @@ export default function PlayerHand({
               }}
               card={
                 cardToLookAt?.placement === cardOrTimer.placement
-                  ? cardOrTimer
+                  ? cardToLookAt
                   : undefined
               }
             />

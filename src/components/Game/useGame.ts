@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
-import { GameCard, GameClass, InfoGive, Player } from "./GameClass";
+import {
+  GameCard,
+  GameCardDTO,
+  GameClass,
+  InfoGive,
+  Player,
+} from "./GameClass";
 import CardClass from "../Card/CardClass";
 
 type TUseGame = {
@@ -10,8 +16,7 @@ type TUseGame = {
   activeAbility: "" | Ability;
   handleCardClick: (
     e: React.MouseEvent<HTMLElement>,
-    card: GameCard,
-    ownerId: string
+    card: GameCardDTO
   ) => void;
   handleTopCardClick: () => void;
   drawCard: () => void;
@@ -181,30 +186,36 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     const handleHandCardSwap = (
       playerId: string,
       placement: number,
-      newCard: CardClass
+      topCard: CardClass
     ) => {
       if (game) {
-        let topCard: CardClass;
-        const players: Player[] = game.players.map((p: Player): Player => {
-          if (p.id === playerId) {
-            const cards = p.cards.map((c: GameCard): GameCard => {
-              if (c.placement === placement) {
-                topCard = { suit: { ...c }.suit, value: { ...c }.value };
-                const nc = { ...newCard, placement };
+        console.log(
+          "player: " +
+            playerId +
+            " put their new card at position: " +
+            placement
+        );
+        // let topCard: CardClass;
+        // const players: Player[] = game.players.map((p: Player): Player => {
+        //   if (p.id === playerId) {
+        //     const cards = p.cards.map((c: GameCard): GameCard => {
+        //       if (c.placement === placement) {
+        //         topCard = { suit: { ...c }.suit, value: { ...c }.value };
+        //         const nc = { ...newCard, placement };
 
-                return nc;
-              }
-              return c;
-            });
-            return { ...p, cards };
-          }
-          return p;
-        });
+        //         return nc;
+        //       }
+        //       return c;
+        //     });
+        //     return { ...p, cards };
+        //   }
+        //   return p;
+        // });
 
         setGame((oldGame) => {
           if (oldGame) {
             setDrawnCard(undefined);
-            return { ...oldGame, players, topCard };
+            return { ...oldGame, topCard };
           }
           return undefined;
         });
@@ -237,7 +248,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
         if (game) {
           const players: Player[] = game.players.map((p: Player): Player => {
             if (p.id === ownerId) {
-              const cards = p.cards.filter((c: GameCard): boolean => {
+              const cards = p.cards.filter((c: GameCardDTO): boolean => {
                 return c.placement !== placement;
               });
               return { ...p, cards };
@@ -285,7 +296,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     const handleGiveCard = (from: InfoGive, to: InfoGive) => {
       if (from !== undefined && to !== undefined) {
         if (game) {
-          let givenCard: GameCard | undefined;
+          let givenCard: GameCardDTO | undefined;
           const players: Player[] = game.players.map((p: Player): Player => {
             if (p.id === from.ownerId) {
               const cards = [...p.cards];
@@ -300,7 +311,10 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
 
           const receiver = players.find((p) => p.id === to.ownerId);
           if (givenCard !== undefined) {
-            receiver?.cards.push({ ...givenCard, placement: to.placement });
+            receiver?.cards.push({
+              ownerId: to.ownerId,
+              placement: to.placement,
+            });
           }
 
           setGame((oldGame) => {
@@ -323,7 +337,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       setCardsToSwap([undefined, undefined]);
     };
 
-    const handlePunishmentCard = (playerId: string, card: GameCard) => {
+    const handlePunishmentCard = (playerId: string, card: GameCardDTO) => {
       if (game === undefined) {
         return;
       }
@@ -356,48 +370,9 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       playerPlacement: { ownerId: string; placement: number },
       opponentPlacement: { ownerId: string; placement: number }
     ) => {
-      setGame((prev) => {
-        if (prev === undefined) {
-          return prev;
-        }
-
-        const newGame = structuredClone(prev);
-
-        const player = newGame.players.find(
-          (p) => p.id === playerPlacement.ownerId
-        );
-        const opponent = newGame.players.find(
-          (p) => p.id === opponentPlacement.ownerId
-        );
-
-        if (player === undefined || opponent === undefined) {
-          return;
-        }
-
-        const playerCardIndex = player.cards.findIndex(
-          (c) => c.placement === playerPlacement.placement
-        );
-        const opponentCardIndex = opponent.cards.findIndex(
-          (c) => c.placement === opponentPlacement.placement
-        );
-        if (playerCardIndex === -1 || opponentCardIndex === -1) {
-          return;
-        }
-
-        //Remove each card
-        const [playerCard] = player.cards.splice(playerCardIndex, 1);
-        const [opponentCard] = opponent.cards.splice(opponentCardIndex, 1);
-
-        //Swap placement numbers of the cards
-        const temp = opponentCard.placement;
-        opponentCard.placement = playerCard.placement;
-        playerCard.placement = temp;
-
-        //Put them back in the others cards
-        player.cards.push(opponentCard);
-        opponent.cards.push(playerCard);
-        return newGame;
-      });
+      console.log("cards were swapped");
+      console.log(playerPlacement);
+      console.log(opponentPlacement);
     };
 
     socket?.on("gameSetup", handleGameSetup);
@@ -437,14 +412,14 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     };
   }, [socket, game, game?.players, game?.topCard, game?.activePlayerId]);
 
-  const handleCardRightClick = (card: GameCard, ownerId: string) => {
-    socket?.emit("cardFlip", gameId, card, ownerId, (maxTime: number) => {
-      if (ownerId !== socket.id) {
+  const handleCardRightClick = (card: GameCardDTO) => {
+    socket?.emit("cardFlip", gameId, card, (maxTime: number) => {
+      if (card.ownerId !== socket.id) {
         //Flipped an opponents card
         setAvailableGives((prev) => [
           ...prev,
           {
-            ownerId,
+            ownerId: card.ownerId,
             placement: card.placement,
             maxTime: maxTime,
             time: maxTime,
@@ -454,8 +429,8 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     });
   };
 
-  const handleCardLeftClick = (card: GameCard, ownerId: string) => {
-    if (ownerId === socket?.id) {
+  const handleCardLeftClick = (card: GameCardDTO) => {
+    if (card.ownerId === socket?.id) {
       if (availableGives.length > 0) {
         socket.emit("giveCard", gameId, card.placement);
       } else if (drawnCard) {
@@ -489,32 +464,29 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       ) {
         setCardToLookAt(undefined); //Removes vision of card you just got given.
         setCardsToSwap(([, their]) => [
-          { ownerId, placement: card.placement },
+          { ownerId: card.ownerId, placement: card.placement },
           their,
         ]);
       }
     } else {
       if (activeAbility == "look-other") {
-        socket?.emit(
-          "lookOther",
-          gameId,
-          ownerId,
-          card.placement,
-          (selectedCard: CardClass) => {
-            setActiveAbility("");
-            setCardToLookAt({
-              ...selectedCard,
-              placement: card.placement,
-              ownerId,
-            });
+        socket?.emit("lookOther", gameId, card, (selectedCard: CardClass) => {
+          setActiveAbility("");
+          setCardToLookAt({
+            ...selectedCard,
+            placement: card.placement,
+            ownerId: card.ownerId,
+          });
 
-            setTimeout(() => {
-              setCardToLookAt(undefined);
-            }, 1000);
-          }
-        );
+          setTimeout(() => {
+            setCardToLookAt(undefined);
+          }, 1000);
+        });
       } else if (activeAbility == "swap-then-look") {
-        setCardsToSwap(([my]) => [my, { ownerId, placement: card.placement }]);
+        setCardsToSwap(([my]) => [
+          my,
+          { ownerId: card.ownerId, placement: card.placement },
+        ]);
       } else if (
         activeAbility == "look-then-swap" &&
         cardToLookAt === undefined
@@ -522,11 +494,14 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
         socket.emit(
           "lookBeforeSwap",
           gameId,
-          ownerId,
+          card.ownerId,
           card.placement,
-          (card: GameCard) => {
-            setCardToLookAt({ ...card, ownerId });
-            setCardsToSwap([undefined, { ownerId, placement: card.placement }]);
+          (shownCard: GameCard) => {
+            setCardToLookAt({ ...shownCard, ownerId: card.ownerId });
+            setCardsToSwap([
+              undefined,
+              { ownerId: card.ownerId, placement: card.placement },
+            ]);
           }
         );
       }
@@ -540,15 +515,14 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
 
   const handleCardClick = (
     e: React.MouseEvent<HTMLElement>,
-    card: GameCard,
-    ownerId: string
+    card: GameCardDTO
   ) => {
     e.preventDefault();
     if (e.nativeEvent.button === 2) {
-      handleCardRightClick(card, ownerId);
+      handleCardRightClick(card);
     } else {
       //Left click
-      handleCardLeftClick(card, ownerId);
+      handleCardLeftClick(card);
     }
   };
 

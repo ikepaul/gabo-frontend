@@ -4,6 +4,10 @@ interface GameCard extends Card {
   placement: number;
 }
 
+interface GameCardDTO {
+  placement: number;
+  ownerId: string;
+}
 interface CardTimer {
   placement: number;
   time: number;
@@ -18,7 +22,7 @@ interface InfoGive {
 }
 interface Player {
   id: string;
-  cards: GameCard[];
+  cards: GameCardDTO[];
 }
 
 type GameState = "Waiting" | "Playing" | "Finished";
@@ -32,4 +36,4 @@ interface GameClass {
   numOfCards: number;
 }
 
-export type { GameClass, GameCard, Player, InfoGive, CardTimer };
+export type { GameClass, GameCard, GameCardDTO, Player, InfoGive, CardTimer };
