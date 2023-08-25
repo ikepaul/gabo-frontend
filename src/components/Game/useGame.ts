@@ -5,13 +5,29 @@ import CardClass from "../Card/CardClass";
 
 type TUseGame = {
   game: GameClass | undefined;
-  setGame: React.Dispatch<React.SetStateAction<GameClass | undefined>>;
   drawnCard: CardClass | undefined;
-  setDrawnCard: React.Dispatch<React.SetStateAction<CardClass | undefined>>;
   availableGives: InfoGive[];
-  setAvailableGives: React.Dispatch<React.SetStateAction<InfoGive[]>>;
   activeAbility: "" | Ability;
-  setActiveAbility: React.Dispatch<React.SetStateAction<"" | Ability>>;
+  handleCardClick: (
+    e: React.MouseEvent<HTMLElement>,
+    card: GameCard,
+    ownerId: string
+  ) => void;
+  handleTopCardClick: () => void;
+  drawCard: () => void;
+  restartGame: () => void;
+  myCardToSwap:
+    | {
+        ownerId: string;
+        placement: number;
+      }
+    | undefined;
+  theirCardToSwap:
+    | {
+        ownerId: string;
+        placement: number;
+      }
+    | undefined;
 };
 
 type Ability = "look-self" | "look-other" | "swap-then-look" | "look-then-swap";
@@ -21,6 +37,12 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
   const [drawnCard, setDrawnCard] = useState<CardClass>();
   const [availableGives, setAvailableGives] = useState<InfoGive[]>([]);
   const [activeAbility, setActiveAbility] = useState<Ability | "">("");
+  const [[myCardToSwap, theirCardToSwap], setCardsToSwap] = useState<
+    [
+      { ownerId: string; placement: number } | undefined,
+      { ownerId: string; placement: number } | undefined
+    ]
+  >([undefined, undefined]);
 
   useEffect(() => {
     socket?.emit("getGame", gameId, (newGame: GameClass) => {
@@ -28,6 +50,57 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       setDrawnCard(undefined);
     });
   }, [gameId]);
+
+  useEffect(() => {
+    const DELAY = 50;
+    if (availableGives.length > 0) {
+      const interval = setInterval(() => {
+        const newGives = availableGives.map((ag) => {
+          const newG = { ...ag };
+          newG.time -= DELAY;
+          return newG;
+        });
+        setAvailableGives(newGives);
+      }, DELAY);
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [availableGives]);
+
+  useEffect(() => {
+    switch (activeAbility) {
+      case "look-self":
+        console.log("LOOK-SELF");
+        break;
+      case "look-other":
+        console.log("LOOK-OTHER");
+        break;
+      case "swap-then-look":
+        console.log("SWAP-THEN-LOOK");
+        break;
+      case "look-then-swap":
+        break;
+      default:
+        break;
+    }
+  }, [activeAbility]);
+
+  useEffect(() => {
+    if (myCardToSwap !== undefined && theirCardToSwap !== undefined) {
+      socket?.emit(
+        "swapThenLook",
+        gameId,
+        myCardToSwap,
+        theirCardToSwap,
+        (receivedCard: GameCard) => {
+          console.log(receivedCard);
+          setActiveAbility("");
+        }
+      );
+      setCardsToSwap([undefined, undefined]);
+    }
+  }, [myCardToSwap, theirCardToSwap]);
 
   useEffect(() => {
     const handleGameSetup = (newGame: GameClass) => {
@@ -355,14 +428,114 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     };
   }, [socket, game, game?.players, game?.topCard, game?.activePlayerId]);
 
+  const handleCardClick = (
+    e: React.MouseEvent<HTMLElement>,
+    card: GameCard,
+    ownerId: string
+  ) => {
+    e.preventDefault();
+    if (e.nativeEvent.button === 2) {
+      //Right click
+      socket?.emit("cardFlip", gameId, card, ownerId, (maxTime: number) => {
+        if (ownerId !== socket.id) {
+          //Flipped an opponents card
+          setAvailableGives((prev) => [
+            ...prev,
+            {
+              ownerId,
+              placement: card.placement,
+              maxTime: maxTime,
+              time: maxTime,
+            },
+          ]);
+        }
+      });
+    } else {
+      //Left click
+      if (ownerId === socket?.id) {
+        if (availableGives.length > 0) {
+          socket.emit("giveCard", gameId, card.placement);
+        } else if (drawnCard) {
+          socket.emit("handCardSwap", gameId, card.placement);
+        } else if (activeAbility == "look-self") {
+          socket.emit("lookSelf", gameId, card.placement, (card: CardClass) => {
+            console.log(card);
+            setActiveAbility("");
+          });
+        } else if (activeAbility == "swap-then-look") {
+          setCardsToSwap(([, their]) => [
+            { ownerId: socket.id, placement: card.placement },
+            their,
+          ]);
+        }
+      } else {
+        if (activeAbility == "look-other") {
+          socket?.emit(
+            "lookOther",
+            gameId,
+            ownerId,
+            card.placement,
+            (card: CardClass) => {
+              console.log(card);
+              setActiveAbility("");
+            }
+          );
+        } else if (activeAbility == "swap-then-look") {
+          setCardsToSwap(([my]) => [
+            my,
+            { ownerId, placement: card.placement },
+          ]);
+        }
+      }
+    }
+  };
+
+  const handleTopCardClick = () => {
+    if (game && game.activePlayerId === socket?.id) {
+      if (drawnCard) {
+        socket.emit("putOnPile", gameId, () => {
+          setDrawnCard(undefined);
+        });
+      } else {
+        if (game.topCard) {
+          socket.emit(
+            "drawFromPile",
+            gameId,
+            (pickedUpCard: CardClass, newTopCard: CardClass) => {
+              setDrawnCard(pickedUpCard);
+              setGame((oldGame) => {
+                if (oldGame) {
+                  return { ...oldGame, topCard: newTopCard };
+                }
+              });
+            }
+          );
+        }
+      }
+    }
+  };
+
+  const drawCard = () => {
+    if (!drawnCard) {
+      socket?.emit("drawFromDeck", gameId, (card: CardClass) => {
+        setDrawnCard(card);
+      });
+    }
+  };
+  const restartGame = () => {
+    socket?.emit("restartGame", gameId);
+  };
+
   return {
     game,
-    setGame,
     drawnCard,
-    setDrawnCard,
     availableGives,
-    setAvailableGives,
     activeAbility,
-    setActiveAbility,
+    handleCardClick,
+    handleTopCardClick,
+    drawCard,
+    restartGame,
+    myCardToSwap,
+    theirCardToSwap,
   };
 }
