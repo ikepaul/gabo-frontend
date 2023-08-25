@@ -58,7 +58,7 @@ function App() {
 
   return (
     <div>
-      {gameId === "" ? (
+      {gameId === "" || !socket ? (
         <div>
           <div>
             <button onClick={createGame}>Create Game</button>
