@@ -428,6 +428,58 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     };
   }, [socket, game, game?.players, game?.topCard, game?.activePlayerId]);
 
+  const handleCardRightClick = (card: GameCard, ownerId: string) => {
+    socket?.emit("cardFlip", gameId, card, ownerId, (maxTime: number) => {
+      if (ownerId !== socket.id) {
+        //Flipped an opponents card
+        setAvailableGives((prev) => [
+          ...prev,
+          {
+            ownerId,
+            placement: card.placement,
+            maxTime: maxTime,
+            time: maxTime,
+          },
+        ]);
+      }
+    });
+  };
+
+  const handleCardLeftClick = (card: GameCard, ownerId: string) => {
+    if (ownerId === socket?.id) {
+      if (availableGives.length > 0) {
+        socket.emit("giveCard", gameId, card.placement);
+      } else if (drawnCard) {
+        socket.emit("handCardSwap", gameId, card.placement);
+      } else if (activeAbility == "look-self") {
+        socket.emit("lookSelf", gameId, card.placement, (card: CardClass) => {
+          console.log(card);
+          setActiveAbility("");
+        });
+      } else if (activeAbility == "swap-then-look") {
+        setCardsToSwap(([, their]) => [
+          { ownerId: socket.id, placement: card.placement },
+          their,
+        ]);
+      }
+    } else {
+      if (activeAbility == "look-other") {
+        socket?.emit(
+          "lookOther",
+          gameId,
+          ownerId,
+          card.placement,
+          (card: CardClass) => {
+            console.log(card);
+            setActiveAbility("");
+          }
+        );
+      } else if (activeAbility == "swap-then-look") {
+        setCardsToSwap(([my]) => [my, { ownerId, placement: card.placement }]);
+      }
+    }
+  };
+
   const handleCardClick = (
     e: React.MouseEvent<HTMLElement>,
     card: GameCard,
@@ -435,58 +487,10 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
   ) => {
     e.preventDefault();
     if (e.nativeEvent.button === 2) {
-      //Right click
-      socket?.emit("cardFlip", gameId, card, ownerId, (maxTime: number) => {
-        if (ownerId !== socket.id) {
-          //Flipped an opponents card
-          setAvailableGives((prev) => [
-            ...prev,
-            {
-              ownerId,
-              placement: card.placement,
-              maxTime: maxTime,
-              time: maxTime,
-            },
-          ]);
-        }
-      });
+      handleCardRightClick(card, ownerId);
     } else {
       //Left click
-      if (ownerId === socket?.id) {
-        if (availableGives.length > 0) {
-          socket.emit("giveCard", gameId, card.placement);
-        } else if (drawnCard) {
-          socket.emit("handCardSwap", gameId, card.placement);
-        } else if (activeAbility == "look-self") {
-          socket.emit("lookSelf", gameId, card.placement, (card: CardClass) => {
-            console.log(card);
-            setActiveAbility("");
-          });
-        } else if (activeAbility == "swap-then-look") {
-          setCardsToSwap(([, their]) => [
-            { ownerId: socket.id, placement: card.placement },
-            their,
-          ]);
-        }
-      } else {
-        if (activeAbility == "look-other") {
-          socket?.emit(
-            "lookOther",
-            gameId,
-            ownerId,
-            card.placement,
-            (card: CardClass) => {
-              console.log(card);
-              setActiveAbility("");
-            }
-          );
-        } else if (activeAbility == "swap-then-look") {
-          setCardsToSwap(([my]) => [
-            my,
-            { ownerId, placement: card.placement },
-          ]);
-        }
-      }
+      handleCardLeftClick(card, ownerId);
     }
   };
 
