@@ -32,14 +32,14 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   if (game === undefined || socket === undefined) {
     return (
       <div>
-        <div
+        <button
           onClick={() => {
             navigator.clipboard.writeText(gameId);
           }}
           style={{ position: "absolute", top: "5px", left: "5px", zIndex: 1 }}
         >
           COPY GAME ID
-        </div>
+        </button>
         <button
           style={{ position: "absolute", top: "40px", left: "5px", zIndex: 1 }}
           onClick={leaveGame}
@@ -76,14 +76,14 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       >
         {game.state === "Waiting" ? "Start Game" : "Restart Game"}
       </button>
-      <div
+      <button
         onClick={() => {
           navigator.clipboard.writeText(gameId);
         }}
         style={{ position: "absolute", top: "5px", left: "5px", zIndex: 1 }}
       >
         COPY GAME ID
-      </div>
+      </button>
       <button
         style={{ position: "absolute", top: "40px", left: "5px", zIndex: 1 }}
         onClick={leaveGame}

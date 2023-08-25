@@ -519,8 +519,16 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
         activeAbility == "look-then-swap" &&
         cardToLookAt === undefined
       ) {
-        setCardToLookAt({ ...card, ownerId });
-        setCardsToSwap([undefined, { ownerId, placement: card.placement }]);
+        socket.emit(
+          "lookBeforeSwap",
+          gameId,
+          ownerId,
+          card.placement,
+          (card: GameCard) => {
+            setCardToLookAt({ ...card, ownerId });
+            setCardsToSwap([undefined, { ownerId, placement: card.placement }]);
+          }
+        );
       }
     }
   };
