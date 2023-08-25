@@ -84,6 +84,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
   }, [availableGives]);
 
   useEffect(() => {
+    //These might instead trigger animations or whatever
     switch (activeAbility) {
       case "look-self":
         console.log("LOOK-SELF");
@@ -95,6 +96,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
         console.log("SWAP-THEN-LOOK");
         break;
       case "look-then-swap":
+        console.log("LOOK-THEN-SWAP");
         break;
       default:
         break;

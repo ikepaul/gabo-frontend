@@ -19,7 +19,8 @@
 
 - Being able to look at a select few of your own cards at the beginning of the game.
 - UI support for more than 4 players.
-- Current score for players.
+- Players should be able to choose the setup/layout of their cards.
+- Current score for players, some kind of scoresheet to keep track of total score between games.
 - Player order should be reflected in their position around the "table".
 - Players should have names shown instead of socket id.
 - Support for keyboard as input instead of mouse.
