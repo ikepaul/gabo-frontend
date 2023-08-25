@@ -194,23 +194,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
             playerId +
             " put their new card at position: " +
             placement
-        );
-        // let topCard: CardClass;
-        // const players: Player[] = game.players.map((p: Player): Player => {
-        //   if (p.id === playerId) {
-        //     const cards = p.cards.map((c: GameCard): GameCard => {
-        //       if (c.placement === placement) {
-        //         topCard = { suit: { ...c }.suit, value: { ...c }.value };
-        //         const nc = { ...newCard, placement };
-
-        //         return nc;
-        //       }
-        //       return c;
-        //     });
-        //     return { ...p, cards };
-        //   }
-        //   return p;
-        // });
+        ); //Replace with something actually happening in the UI
 
         setGame((oldGame) => {
           if (oldGame) {
@@ -296,26 +280,21 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     const handleGiveCard = (from: InfoGive, to: InfoGive) => {
       if (from !== undefined && to !== undefined) {
         if (game) {
-          let givenCard: GameCardDTO | undefined;
           const players: Player[] = game.players.map((p: Player): Player => {
             if (p.id === from.ownerId) {
-              const cards = [...p.cards];
-              const index = cards.findIndex(
-                (c) => c.placement === from.placement
+              const cards = p.cards.filter(
+                (c) => c.placement !== from.placement
               );
-              [givenCard] = cards.splice(index, 1);
               return { ...p, cards };
             }
             return p;
           });
 
           const receiver = players.find((p) => p.id === to.ownerId);
-          if (givenCard !== undefined) {
-            receiver?.cards.push({
-              ownerId: to.ownerId,
-              placement: to.placement,
-            });
-          }
+          receiver?.cards.push({
+            ownerId: to.ownerId,
+            placement: to.placement,
+          });
 
           setGame((oldGame) => {
             if (oldGame) {
@@ -337,12 +316,12 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       setCardsToSwap([undefined, undefined]);
     };
 
-    const handlePunishmentCard = (playerId: string, card: GameCardDTO) => {
+    const handlePunishmentCard = (card: GameCardDTO) => {
       if (game === undefined) {
         return;
       }
       const players: Player[] = game.players.map((player: Player): Player => {
-        if (player.id === playerId) {
+        if (player.id === card.ownerId) {
           const cards = player.cards.map((pc) => ({
             ...pc,
           }));
