@@ -4,7 +4,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import CardHelper from "./CardHelper";
 
 interface CardProps extends ComponentPropsWithoutRef<"div"> {
-  card: CardClass;
+  card?: CardClass;
   width?: number;
   height?: number;
   scale?: number;
@@ -29,14 +29,19 @@ export default function Card({
   height *= scale;
   const w_scale = width !== undefined ? width / CARD_WIDTH : 1;
   const h_scale = height !== undefined ? height / CARD_HEIGHT : 1;
-  const sprite_x =
-    CARD_MARGIN_LEFT +
-    (CardHelper.StandardCardValue(card) - 1) *
-      (CARD_WIDTH + CARD_GAP_HORIZONTAL);
-  const sprite_y =
-    CARD_MARGIN_TOP +
-    CardHelper.SuitNumber(card) * (CARD_HEIGHT + CARD_GAP_VERTICAL);
-
+  let sprite_x, sprite_y;
+  if (card) {
+    sprite_x =
+      CARD_MARGIN_LEFT +
+      (CardHelper.StandardCardValue(card) - 1) *
+        (CARD_WIDTH + CARD_GAP_HORIZONTAL);
+    sprite_y =
+      CARD_MARGIN_TOP +
+      CardHelper.SuitNumber(card) * (CARD_HEIGHT + CARD_GAP_VERTICAL);
+  } else {
+    sprite_x = CARD_MARGIN_LEFT + 13 * (CARD_WIDTH + CARD_GAP_HORIZONTAL);
+    sprite_y = CARD_MARGIN_TOP + 3 * (CARD_HEIGHT + CARD_GAP_VERTICAL);
+  }
   return (
     <div
       style={{

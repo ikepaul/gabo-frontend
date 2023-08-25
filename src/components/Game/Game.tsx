@@ -23,6 +23,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     myCardToSwap,
     theirCardToSwap,
     activeAbility,
+    cardToLookAt,
   } = useGame(socket, gameId);
 
   //Lots of if, please structure in different way.
@@ -117,6 +118,9 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
               handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
               player={player}
               isActivePlayer={game.activePlayerId === player.id}
+              cardToLookAt={
+                cardToLookAt?.ownerId === player.id ? cardToLookAt : undefined
+              }
               numOfCards={game.numOfCards}
               selectedCard={
                 player.id === myCardToSwap?.ownerId
@@ -147,6 +151,9 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
             handleLeftClick={(e, c) => handleCardClick(e, c, player.id)}
             handleRightClick={(e, c) => handleCardClick(e, c, player.id)}
             player={player}
+            cardToLookAt={
+              cardToLookAt?.ownerId === player.id ? cardToLookAt : undefined
+            }
             isActivePlayer={game.activePlayerId === player.id}
             numOfCards={game.numOfCards}
             selectedCard={

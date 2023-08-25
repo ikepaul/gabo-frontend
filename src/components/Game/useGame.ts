@@ -28,6 +28,12 @@ type TUseGame = {
         placement: number;
       }
     | undefined;
+
+  cardToLookAt:
+    | (GameCard & {
+        ownerId: string;
+      })
+    | undefined;
 };
 
 type Ability = "look-self" | "look-other" | "swap-then-look" | "look-then-swap";
@@ -43,6 +49,9 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       { ownerId: string; placement: number } | undefined
     ]
   >([undefined, undefined]);
+  const [cardToLookAt, setCardToLookAt] = useState<
+    GameCard & { ownerId: string }
+  >();
 
   useEffect(() => {
     socket?.emit("getGame", gameId, (newGame: GameClass) => {
@@ -94,13 +103,16 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
         myCardToSwap,
         theirCardToSwap,
         (receivedCard: GameCard) => {
-          console.log(receivedCard);
           setActiveAbility("");
+          setCardToLookAt({ ...receivedCard, ownerId: myCardToSwap.ownerId });
+          setTimeout(() => {
+            setCardToLookAt(undefined);
+          }, 1000);
         }
       );
       setCardsToSwap([undefined, undefined]);
     }
-  }, [myCardToSwap, theirCardToSwap]);
+  }, [myCardToSwap, theirCardToSwap, gameId, socket]);
 
   useEffect(() => {
     const handleGameSetup = (newGame: GameClass) => {
@@ -333,61 +345,42 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
           return prev;
         }
 
-        const newGame = { ...prev };
-        newGame.players = newGame.players.map((p) => {
-          const cards = p.cards.map((c) => ({ ...c }));
-          return { ...p, cards };
-        });
+        const newGame = structuredClone(prev);
 
-        const playerIndex = newGame.players.findIndex(
-          (p) => p.id == playerPlacement.ownerId
+        const player = newGame.players.find(
+          (p) => p.id === playerPlacement.ownerId
         );
-        const opponentIndex = newGame.players.findIndex(
-          (p) => p.id == opponentPlacement.ownerId
+        const opponent = newGame.players.find(
+          (p) => p.id === opponentPlacement.ownerId
         );
 
-        if (playerIndex === -1 || opponentIndex === -1) {
-          return prev;
+        if (player === undefined || opponent === undefined) {
+          return;
         }
-        const playerCardIndex = newGame.players[playerIndex].cards.findIndex(
+
+        const playerCardIndex = player.cards.findIndex(
           (c) => c.placement === playerPlacement.placement
         );
-        const opponentCardIndex = newGame.players[
-          opponentIndex
-        ].cards.findIndex((c) => c.placement === opponentPlacement.placement);
-
+        const opponentCardIndex = opponent.cards.findIndex(
+          (c) => c.placement === opponentPlacement.placement
+        );
         if (playerCardIndex === -1 || opponentCardIndex === -1) {
-          return prev;
+          return;
         }
 
-        let playerCard: GameCard | undefined,
-          opponentCard: GameCard | undefined;
+        //Remove each card
+        const [playerCard] = player.cards.splice(playerCardIndex, 1);
+        const [opponentCard] = opponent.cards.splice(opponentCardIndex, 1);
 
-        const newPlayers = newGame.players.map((p) => {
-          const tempCards = p.cards.map((c) => ({ ...c }));
-          const tempP = { ...p, cards: tempCards };
+        //Swap placement numbers of the cards
+        const temp = opponentCard.placement;
+        opponentCard.placement = playerCard.placement;
+        playerCard.placement = temp;
 
-          if (p.id === playerPlacement.ownerId) {
-            [playerCard] = tempP.cards.splice(playerCardIndex, 1);
-          }
-          if (p.id === opponentPlacement.ownerId) {
-            [opponentCard] = tempP.cards.splice(opponentCardIndex, 1);
-          }
-          return { ...tempP };
-        });
-
-        if (playerCard && opponentCard) {
-          const temp = opponentCard.placement;
-          opponentCard.placement = playerCard.placement;
-          playerCard.placement = temp;
-
-          newPlayers[playerIndex].cards.push(opponentCard);
-          newPlayers[opponentIndex].cards.push(playerCard);
-
-          return { ...newGame, players: newPlayers };
-        } else {
-          return prev;
-        }
+        //Put them back in the others cards
+        player.cards.push(opponentCard);
+        opponent.cards.push(playerCard);
+        return newGame;
       });
     };
 
@@ -452,10 +445,23 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       } else if (drawnCard) {
         socket.emit("handCardSwap", gameId, card.placement);
       } else if (activeAbility == "look-self") {
-        socket.emit("lookSelf", gameId, card.placement, (card: CardClass) => {
-          console.log(card);
-          setActiveAbility("");
-        });
+        socket.emit(
+          "lookSelf",
+          gameId,
+          card.placement,
+          (selectedCard: CardClass) => {
+            setActiveAbility("");
+            setCardToLookAt({
+              ...selectedCard,
+              placement: card.placement,
+              ownerId: socket.id,
+            });
+
+            setTimeout(() => {
+              setCardToLookAt(undefined);
+            }, 1000);
+          }
+        );
       } else if (activeAbility == "swap-then-look") {
         setCardsToSwap(([, their]) => [
           { ownerId: socket.id, placement: card.placement },
@@ -469,9 +475,17 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
           gameId,
           ownerId,
           card.placement,
-          (card: CardClass) => {
-            console.log(card);
+          (selectedCard: CardClass) => {
             setActiveAbility("");
+            setCardToLookAt({
+              ...selectedCard,
+              placement: card.placement,
+              ownerId,
+            });
+
+            setTimeout(() => {
+              setCardToLookAt(undefined);
+            }, 1000);
           }
         );
       } else if (activeAbility == "swap-then-look") {
@@ -541,5 +555,6 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     restartGame,
     myCardToSwap,
     theirCardToSwap,
+    cardToLookAt,
   };
 }
