@@ -16,6 +16,7 @@ type TUseGame = {
   handleTopCardClick: () => void;
   drawCard: () => void;
   restartGame: () => void;
+  cancelAbility: () => void;
   myCardToSwap:
     | {
         ownerId: string;
@@ -97,20 +98,33 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
 
   useEffect(() => {
     if (myCardToSwap !== undefined && theirCardToSwap !== undefined) {
-      socket?.emit(
-        "swapThenLook",
-        gameId,
-        myCardToSwap,
-        theirCardToSwap,
-        (receivedCard: GameCard) => {
-          setActiveAbility("");
-          setCardToLookAt({ ...receivedCard, ownerId: myCardToSwap.ownerId });
-          setTimeout(() => {
-            setCardToLookAt(undefined);
-          }, 1000);
-        }
-      );
-      setCardsToSwap([undefined, undefined]);
+      if (activeAbility == "swap-then-look") {
+        socket?.emit(
+          "swapThenLook",
+          gameId,
+          myCardToSwap,
+          theirCardToSwap,
+          (receivedCard: GameCard) => {
+            setActiveAbility("");
+            setCardToLookAt({ ...receivedCard, ownerId: myCardToSwap.ownerId });
+            setTimeout(() => {
+              setCardToLookAt(undefined);
+            }, 1000);
+          }
+        );
+        setCardsToSwap([undefined, undefined]);
+      } else if (activeAbility == "look-then-swap") {
+        socket?.emit(
+          "lookThenSwap",
+          gameId,
+          myCardToSwap,
+          theirCardToSwap,
+          () => {
+            setActiveAbility("");
+            setCardsToSwap([undefined, undefined]);
+          }
+        );
+      }
     }
   }, [myCardToSwap, theirCardToSwap, gameId, socket]);
 
@@ -305,6 +319,8 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
           return { ...oldGame, activePlayerId };
         }
       });
+      setActiveAbility("");
+      setCardsToSwap([undefined, undefined]);
     };
 
     const handlePunishmentCard = (playerId: string, card: GameCard) => {
@@ -467,6 +483,15 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
           { ownerId: socket.id, placement: card.placement },
           their,
         ]);
+      } else if (
+        activeAbility == "look-then-swap" &&
+        cardToLookAt !== undefined
+      ) {
+        setCardToLookAt(undefined); //Removes vision of card you just got given.
+        setCardsToSwap(([, their]) => [
+          { ownerId, placement: card.placement },
+          their,
+        ]);
       }
     } else {
       if (activeAbility == "look-other") {
@@ -490,8 +515,19 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
         );
       } else if (activeAbility == "swap-then-look") {
         setCardsToSwap(([my]) => [my, { ownerId, placement: card.placement }]);
+      } else if (
+        activeAbility == "look-then-swap" &&
+        cardToLookAt === undefined
+      ) {
+        setCardToLookAt({ ...card, ownerId });
+        setCardsToSwap([undefined, { ownerId, placement: card.placement }]);
       }
     }
+  };
+
+  const cancelAbility = () => {
+    socket.emit("cancelAbility", gameId);
+    setCardToLookAt(undefined);
   };
 
   const handleCardClick = (
@@ -556,5 +592,6 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     myCardToSwap,
     theirCardToSwap,
     cardToLookAt,
+    cancelAbility,
   };
 }

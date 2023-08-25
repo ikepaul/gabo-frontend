@@ -24,6 +24,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     theirCardToSwap,
     activeAbility,
     cardToLookAt,
+    cancelAbility,
   } = useGame(socket, gameId);
 
   //Lots of if, please structure in different way.
@@ -63,7 +64,12 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           </li>
         ))}
       </ul>
-      <div>{activeAbility}</div>
+      {activeAbility && (
+        <div>
+          {activeAbility}
+          <button onClick={cancelAbility}>Cancel</button>{" "}
+        </div>
+      )}
       <button
         style={{ position: "absolute", top: "5px", right: "5px", zIndex: 1 }}
         onClick={restartGame}
