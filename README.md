@@ -14,7 +14,7 @@
 - Spectating. When you join a lobby you're initially placed in spectator. If the game starts/restarts as many players as possible from spectators automatically join the game.
 - Card abilities, controls are a bit weird and time to look at a card is limited but works fine.
 - Hidden cards
-- Join a lobby by url parameter. (Doesnt really join only puts it in the input, but whatever.)
+- Join a lobby by url parameter.
 - Card themes.
 
 ## Missing Features
