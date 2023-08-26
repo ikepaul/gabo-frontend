@@ -139,6 +139,9 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     const handleGameSetup = (newGame: GameClass) => {
       setGame({ ...newGame });
       setDrawnCard(undefined);
+      setCardToLookAt(undefined);
+      setActiveAbility("");
+      setAvailableGives([]);
     };
 
     const handlePlayerLeft = (
