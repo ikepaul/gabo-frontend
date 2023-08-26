@@ -14,6 +14,7 @@
 - Spectating. When you join a lobby you're initially placed in spectator. If the game starts/restarts as many players as possible from spectators automatically join the game.
 - Card abilities, controls are a bit weird and time to look at a card is limited but works fine.
 - Hidden cards
+- Join a lobby by url parameter. (Doesnt really join only puts it in the input, but whatever.)
 
 ## Missing Features
 
@@ -24,6 +25,8 @@
 - Player order should be reflected in their position around the "table".
 - Players should have names shown instead of socket id.
 - Support for keyboard as input instead of mouse.
+- SAYING GABO, a.k.a. ending a game.
+- Card themes.
 
 # React + TypeScript + Vite
 

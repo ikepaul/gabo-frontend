@@ -5,7 +5,9 @@ import { Socket, io } from "socket.io-client";
 function App() {
   const [socket, setSocket] = useState<Socket>();
   const [gameId, setGameId] = useState<string>("");
-  const [inputGameId, setInputGameId] = useState<string>("");
+  const [inputGameId, setInputGameId] = useState<string>(
+    window.location.pathname.substring(1)
+  );
   const [numOfCards, setNumOfCards] = useState<number>(4);
   const [playerLimit, setPlayerLimit] = useState<number>(4);
 
@@ -37,6 +39,7 @@ function App() {
   const createGame = () => {
     socket?.emit("createGame", numOfCards, playerLimit, (id: string) => {
       setGameId(id);
+      window.history.replaceState(null, "New Page Title", "/" + id);
     });
   };
 
@@ -47,6 +50,7 @@ function App() {
       }
       if (status == "ok") {
         setGameId(inputGameId);
+        window.history.replaceState(null, "New Page Title", "/" + inputGameId);
       }
     });
   };
