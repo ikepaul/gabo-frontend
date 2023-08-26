@@ -29,6 +29,12 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (window.location.pathname.substring(1)) {
+      joinGame(window.location.pathname.substring(1));
+    }
+  }, [socket]);
+
   const leaveGame = () => {
     socket?.emit("leaveGame", gameId, (res: string) => {
       console.log(res);
@@ -43,8 +49,8 @@ function App() {
     });
   };
 
-  const joinGame = () => {
-    socket?.emit("joinGame", inputGameId, (status: string) => {
+  const joinGame = (id: string) => {
+    socket?.emit("joinGame", id, (status: string) => {
       if (status == "404") {
         return;
       }
@@ -118,7 +124,7 @@ function App() {
                 setInputGameId(e.target.value);
               }}
             />
-            <button onClick={joinGame}>Join Game</button>
+            <button onClick={() => joinGame(inputGameId)}>Join Game</button>
           </div>
         </div>
       ) : (
