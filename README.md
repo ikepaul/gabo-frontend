@@ -15,6 +15,7 @@
 - Card abilities, controls are a bit weird and time to look at a card is limited but works fine.
 - Hidden cards
 - Join a lobby by url parameter. (Doesnt really join only puts it in the input, but whatever.)
+- Card themes.
 
 ## Missing Features
 
@@ -26,7 +27,7 @@
 - Players should have names shown instead of socket id.
 - Support for keyboard as input instead of mouse.
 - SAYING GABO, a.k.a. ending a game.
-- Card themes.
+- Selected card theme doesnt persist when you reload site.
 
 # React + TypeScript + Vite
 

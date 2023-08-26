@@ -4,6 +4,8 @@ import Card from "../Card/Card";
 import CardOutline from "../Card/CardOutline";
 import DeckDisplay from "../DeckDisplay/DeckDisplay";
 import { useGame } from "./useGame";
+import { useState } from "react";
+import Settings from "../Settings/Settings";
 
 interface GameProps {
   socket: Socket;
@@ -26,6 +28,8 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     cardToLookAt,
     cancelAbility,
   } = useGame(socket, gameId);
+
+  const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
 
   //Lots of if, please structure in different way.
 
@@ -56,7 +60,44 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
 
   return (
     <div>
-      <ul style={{ position: "absolute", right: "20px", bottom: "10px" }}>
+      {settingsIsOpen && (
+        <div
+          style={{
+            width: "20vw",
+            height: "100px",
+            backgroundColor: "rgba(255,255,255,0.1)",
+            backdropFilter: "blur(5px)",
+            position: "absolute",
+            bottom: "100px",
+            left: "10px",
+            zIndex: 99,
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          <Settings />
+        </div>
+      )}
+      <button
+        onClick={() => {
+          setSettingsIsOpen((prev) => !prev);
+        }}
+        style={{
+          position: "absolute",
+          zIndex: 2,
+          left: "10px",
+          bottom: "10px",
+        }}
+      >
+        {settingsIsOpen ? "Close settings" : "Open settings"}
+      </button>
+      <ul
+        style={{
+          position: "absolute",
+          right: "20px",
+          bottom: "10px",
+        }}
+      >
         {game.spectators.map((s) => (
           <li key={s}>
             {s}
@@ -91,10 +132,9 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         Leave Game
       </button>
       <DeckDisplay
-        style={{ position: "absolute", top: "50vh", left: "35vw" }}
+        style={{ position: "absolute", top: "calc(50vh - 30px)", left: "35vw" }}
         onClick={drawCard}
         deckSize={game.deckSize}
-        outline={game.deckSize == 0}
       />
       {drawnCard && (
         <Card
@@ -104,7 +144,11 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       )}
       {game.topCard ? (
         <Card
-          style={{ position: "absolute", top: "50vh", left: "50vw" }}
+          style={{
+            position: "absolute",
+            top: "50vh",
+            left: "50vw",
+          }}
           card={game.topCard}
           onClick={handleTopCardClick}
         />
