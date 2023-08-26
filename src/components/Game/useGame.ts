@@ -232,6 +232,12 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     ) => {
       if (topCard && ownerId && placement !== undefined) {
         if (game) {
+          if (
+            cardToLookAt?.ownerId === ownerId &&
+            cardToLookAt.placement === placement
+          ) {
+            cancelAbility();
+          }
           const players: Player[] = game.players.map((p: Player): Player => {
             if (p.id === ownerId) {
               const cards = p.cards.filter((c: GameCardDTO): boolean => {
@@ -391,7 +397,14 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       socket?.removeListener("useAbility", handleUseAbility);
       socket?.removeListener("cardSwap", handleCardSwap);
     };
-  }, [socket, game, game?.players, game?.topCard, game?.activePlayerId]);
+  }, [
+    socket,
+    game,
+    game?.players,
+    game?.topCard,
+    game?.activePlayerId,
+    cardToLookAt,
+  ]);
 
   const handleCardRightClick = (card: GameCardDTO) => {
     socket?.emit("cardFlip", gameId, card, (maxTime: number) => {

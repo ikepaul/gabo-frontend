@@ -21,7 +21,9 @@ export default function Settings() {
         onChange={(e) => cardTheme.front[1](e.target.value as FrontTheme)} // ... and update the state variable on any change!
       >
         {Object.keys(FRONT_THEMES).map((theme) => (
-          <option value={theme}>{theme}</option>
+          <option key={theme} value={theme}>
+            {theme}
+          </option>
         ))}
       </select>
       <select
@@ -29,7 +31,9 @@ export default function Settings() {
         onChange={(e) => cardTheme.back[1](e.target.value as BackTheme)} // ... and update the state variable on any change!
       >
         {Object.keys(BACKS_POSITIONS).map((theme) => (
-          <option value={theme}>{theme}</option>
+          <option key={theme} value={theme}>
+            {theme}
+          </option>
         ))}
       </select>
     </div>
