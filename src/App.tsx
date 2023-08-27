@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Game from "./components/Game/Game";
 import { Socket, io } from "socket.io-client";
+import SignOutBtn from "./components/Authenticate/SignOutBtn";
 
 function App() {
   const [socket, setSocket] = useState<Socket>();
@@ -39,6 +40,7 @@ function App() {
     socket?.emit("leaveGame", gameId, (res: string) => {
       console.log(res);
       setGameId("");
+      window.history.replaceState(null, "New Page Title", "/");
     });
   };
 
@@ -70,6 +72,7 @@ function App() {
     <div>
       {gameId === "" || !socket ? (
         <div>
+          <SignOutBtn />
           <div>
             <button onClick={createGame}>Create Game</button>
             Number of cards:
