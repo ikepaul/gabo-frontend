@@ -17,6 +17,7 @@
 - Join a lobby by url parameter.
 - Card themes.
 - User can login in with firebase and their name is displayed.
+- Card theme is stored in firebase.
 
 ## Missing Features
 
@@ -27,7 +28,6 @@
 - Player order should be reflected in their position around the "table".
 - Support for keyboard as input instead of mouse.
 - SAYING GABO, a.k.a. ending a game.
-- Selected card theme doesnt persist when you reload site.
 
 # React + TypeScript + Vite
 
