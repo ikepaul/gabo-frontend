@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Game from "./components/Game/Game";
 import { Socket, io } from "socket.io-client";
 import SignOutBtn from "./components/Authenticate/SignOutBtn";
+import { UserContext } from "./contexts/UserContext";
 
 function App() {
+  const user = useContext(UserContext);
   const [socket, setSocket] = useState<Socket>();
   const [gameId, setGameId] = useState<string>("");
   const [inputGameId, setInputGameId] = useState<string>(
@@ -13,13 +15,19 @@ function App() {
   const [playerLimit, setPlayerLimit] = useState<number>(4);
 
   useEffect(() => {
-    const socket = io("localhost:3000");
-    setSocket(socket);
+    user?.getIdToken().then((idToken) => {
+      const socket = io("localhost:3000", { auth: { idToken } });
+      setSocket(socket);
+    });
+  }, []);
 
-    socket.on("disconnect", () => {
+  useEffect(() => {
+    if (window.location.pathname.substring(1)) {
+      joinGame(window.location.pathname.substring(1));
+    }
+    socket?.on("disconnect", () => {
       setGameId("");
     });
-
     return () => {
       if (socket) {
         socket.disconnect();
@@ -28,12 +36,6 @@ function App() {
         console.log("Disconnecting");
       }
     };
-  }, []);
-
-  useEffect(() => {
-    if (window.location.pathname.substring(1)) {
-      joinGame(window.location.pathname.substring(1));
-    }
   }, [socket]);
 
   const leaveGame = () => {

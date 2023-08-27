@@ -4,8 +4,9 @@ import Card from "../Card/Card";
 import CardOutline from "../Card/CardOutline";
 import DeckDisplay from "../DeckDisplay/DeckDisplay";
 import { useGame } from "./useGame";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import Settings from "../Settings/Settings";
+import { UserContext } from "../../contexts/UserContext";
 
 interface GameProps {
   socket: Socket;
@@ -30,10 +31,11 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   } = useGame(socket, gameId);
 
   const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
+  const user = useContext(UserContext);
 
   //Lots of if, please structure in different way.
 
-  if (game === undefined || socket === undefined) {
+  if (game === undefined || socket === undefined || user === null) {
     return (
       <div>
         <button
@@ -55,7 +57,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     );
   }
 
-  const isSpectating = game.spectators.includes(socket.id);
+  const isSpectating = game.spectators.some((s) => s.uid === user?.uid);
   const seatings: Seating[] = ["top", "right", "left"];
 
   return (
@@ -99,9 +101,9 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         }}
       >
         {game.spectators.map((s) => (
-          <li key={s}>
-            {s}
-            {s == socket.id && " (you) "}
+          <li key={s.uid}>
+            {s.displayName}
+            {s.uid == user.uid && " (you) "}
           </li>
         ))}
       </ul>
@@ -159,28 +161,32 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         />
       )}
       {game.players?.map((player, i) => {
-        if (player.id === socket?.id) {
+        if (player.user.uid === user.uid) {
           return (
             <PlayerHand
               seating={"bottom"}
-              key={player.id}
+              key={player.user.uid}
               handleLeftClick={(e, c) => handleCardClick(e, c)}
               handleRightClick={(e, c) => handleCardClick(e, c)}
               player={player}
-              isActivePlayer={game.activePlayerId === player.id}
+              isActivePlayer={game.activePlayerId === player.user.uid}
               cardToLookAt={
-                cardToLookAt?.ownerId === player.id ? cardToLookAt : undefined
+                cardToLookAt?.ownerId === player.user.uid
+                  ? cardToLookAt
+                  : undefined
               }
               numOfCards={game.numOfCards}
               selectedCard={
-                player.id === myCardToSwap?.ownerId
+                player.user.uid === myCardToSwap?.ownerId
                   ? myCardToSwap.placement
                   : undefined
               }
             />
           );
         }
-        const gives = availableGives.filter((ag) => ag.ownerId === player.id);
+        const gives = availableGives.filter(
+          (ag) => ag.ownerId === player.user.uid
+        );
 
         let placement = seatings.shift();
         if (isSpectating && game.players.length == 2 && i === 1) {
@@ -196,18 +202,21 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
               time: ag.time,
               maxTime: ag.maxTime,
             }))}
-            key={player.id}
+            key={player.user.uid}
             seating={placement}
             handleLeftClick={(e, c) => handleCardClick(e, c)}
             handleRightClick={(e, c) => handleCardClick(e, c)}
             player={player}
             cardToLookAt={
-              cardToLookAt?.ownerId === player.id ? cardToLookAt : undefined
+              cardToLookAt?.ownerId === player.user.uid
+                ? cardToLookAt
+                : undefined
             }
-            isActivePlayer={game.activePlayerId === player.id}
+            isActivePlayer={game.activePlayerId === player.user.uid}
             numOfCards={game.numOfCards}
             selectedCard={
-              player.id === theirCardToSwap?.ownerId
+              player.user.uid !== undefined &&
+              player.user.uid === theirCardToSwap?.ownerId
                 ? theirCardToSwap.placement
                 : undefined
             }

@@ -1,3 +1,4 @@
+import User from "../../classes/User";
 import Card from "../Card/CardClass";
 
 interface GameCard extends Card {
@@ -21,14 +22,14 @@ interface InfoGive {
   maxTime: number;
 }
 interface Player {
-  id: string;
+  user: User;
   cards: GameCardDTO[];
 }
 
 type GameState = "Waiting" | "Playing" | "Finished";
 interface GameClass {
   players: Player[];
-  spectators: string[];
+  spectators: User[];
   state: GameState;
   activePlayerId: string;
   topCard: Card | undefined;

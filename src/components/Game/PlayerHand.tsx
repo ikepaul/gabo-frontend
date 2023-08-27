@@ -27,7 +27,10 @@ interface PlayerHandProps {
 }
 
 export default function PlayerHand({
-  player: { cards, id },
+  player: {
+    cards,
+    user: { displayName },
+  },
   handleLeftClick,
   handleRightClick,
   numOfCards,
@@ -125,7 +128,7 @@ export default function PlayerHand({
           )
         )}
       </div>
-      <div>{id}</div>
+      <div>{displayName}</div>
     </div>
   );
 }

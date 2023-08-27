@@ -16,6 +16,7 @@
 - Hidden cards
 - Join a lobby by url parameter.
 - Card themes.
+- User can login in with firebase and their name is displayed.
 
 ## Missing Features
 
@@ -24,7 +25,6 @@
 - Players should be able to choose the setup/layout of their cards.
 - Current score for players, some kind of scoresheet to keep track of total score between games.
 - Player order should be reflected in their position around the "table".
-- Players should have names shown instead of socket id.
 - Support for keyboard as input instead of mouse.
 - SAYING GABO, a.k.a. ending a game.
 - Selected card theme doesnt persist when you reload site.
