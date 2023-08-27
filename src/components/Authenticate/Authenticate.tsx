@@ -5,7 +5,8 @@ import {
   updateProfile,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { app } from "../../firebase/firebase";
+import { app, firestore } from "../../firebase/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function Authenticate() {
   const [emailIn, setEmailIn] = useState<string>("");
@@ -28,6 +29,10 @@ export default function Authenticate() {
         // Signed in
         updateProfile(userCredential.user, {
           displayName,
+        });
+        setDoc(doc(firestore, "users", userCredential.user.uid), {
+          cardBackTheme: "plain_black",
+          cardFrontTheme: "dark_2color_0",
         });
       })
       .catch((error) => {
