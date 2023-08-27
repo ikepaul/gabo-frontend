@@ -53,6 +53,7 @@ export default function PlayerHand({
       placementStyling.top = "10px";
       placementStyling.left = 0;
       placementStyling.right = 0;
+      placementStyling.transform = "rotate(180deg)";
       break;
     case "right":
       placementStyling.right = "5%";
