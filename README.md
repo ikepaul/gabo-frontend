@@ -18,6 +18,7 @@
 - Card themes.
 - User can login in with firebase and their name is displayed.
 - Card theme is stored in firebase.
+- Players are ordered the same around the "table" for all clients.
 
 ## Missing Features
 
@@ -25,7 +26,6 @@
 - UI support for more than 4 players.
 - Players should be able to choose the setup/layout of their cards.
 - Current score for players, some kind of scoresheet to keep track of total score between games.
-- Player order should be reflected in their position around the "table".
 - Support for keyboard as input instead of mouse.
 - SAYING GABO, a.k.a. ending a game.
 

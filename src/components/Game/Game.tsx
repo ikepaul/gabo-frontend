@@ -7,6 +7,7 @@ import { useGame } from "./useGame";
 import { useContext, useState } from "react";
 import Settings from "../Settings/Settings";
 import { UserContext } from "../../contexts/UserContext";
+import { cycle } from "../../utils/arrays";
 
 interface GameProps {
   socket: Socket;
@@ -33,8 +34,6 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
   const user = useContext(UserContext);
 
-  //Lots of if, please structure in different way.
-
   if (game === undefined || socket === undefined || user === null) {
     return (
       <div>
@@ -57,8 +56,38 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     );
   }
 
-  const isSpectating = game.spectators.some((s) => s.uid === user?.uid);
-  const seatings: Seating[] = ["top", "right", "left"];
+  const assignOpponentSeatings = (): Seating[] => {
+    const playerIsSpectating = game.spectators.some((s) => s.uid === user?.uid);
+    const playerIndex = game.players.findIndex((p) => p.user.uid == user.uid);
+
+    if (playerIsSpectating) {
+      switch (game.players.length) {
+        case 4:
+          return ["bottom", "left", "top", "right"];
+        case 3:
+          return ["left", "top", "right"];
+        case 2:
+          return ["bottom", "top"];
+        case 1:
+          return ["top"];
+      }
+    } else {
+      switch (game.players.length) {
+        case 4:
+        case 3:
+          return cycle<Seating>(
+            ["bottom", "left", "top", "right"],
+            playerIndex
+          );
+        case 2:
+          return cycle<Seating>(["bottom", "top"], playerIndex);
+        case 1:
+          return ["bottom"];
+      }
+    }
+    return [];
+  };
+  const seatings = assignOpponentSeatings();
 
   return (
     <div>
@@ -160,41 +189,17 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           onClick={handleTopCardClick}
         />
       )}
-      {game.players?.map((player, i) => {
-        if (player.user.uid === user.uid) {
-          return (
-            <PlayerHand
-              seating={"bottom"}
-              key={player.user.uid}
-              handleLeftClick={(e, c) => handleCardClick(e, c)}
-              handleRightClick={(e, c) => handleCardClick(e, c)}
-              player={player}
-              isActivePlayer={game.activePlayerId === player.user.uid}
-              cardToLookAt={
-                cardToLookAt?.ownerId === player.user.uid
-                  ? cardToLookAt
-                  : undefined
-              }
-              numOfCards={game.numOfCards}
-              selectedCard={
-                player.user.uid === myCardToSwap?.ownerId
-                  ? myCardToSwap.placement
-                  : undefined
-              }
-            />
-          );
-        }
+      {game.players.map((player) => {
         const gives = availableGives.filter(
           (ag) => ag.ownerId === player.user.uid
         );
-
-        let placement = seatings.shift();
-        if (isSpectating && game.players.length == 2 && i === 1) {
-          placement = "bottom";
-        }
-        if (placement === undefined) {
-          placement = "bottom";
-        }
+        const placement = seatings.shift();
+        const selectedCard =
+          player.user.uid === theirCardToSwap?.ownerId
+            ? theirCardToSwap.placement
+            : player.user.uid === myCardToSwap?.ownerId
+            ? myCardToSwap?.placement
+            : undefined;
         return (
           <PlayerHand
             timers={gives.map((ag) => ({
@@ -214,12 +219,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
             }
             isActivePlayer={game.activePlayerId === player.user.uid}
             numOfCards={game.numOfCards}
-            selectedCard={
-              player.user.uid !== undefined &&
-              player.user.uid === theirCardToSwap?.ownerId
-                ? theirCardToSwap.placement
-                : undefined
-            }
+            selectedCard={selectedCard}
           />
         );
       })}
