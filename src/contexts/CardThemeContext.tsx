@@ -34,9 +34,15 @@ function CardThemeProvider(props: Props) {
     }
     const unsub = onSnapshot(doc(firestore, "users", user.uid), (res) => {
       const d = res.data();
-      if (d) {
-        setBackTheme(d.backTheme);
-        setFrontTheme(d.frontTheme);
+      if (d && d.cardBackTheme) {
+        setBackTheme(d.cardBackTheme);
+      } else {
+        setBackTheme("plain_black");
+      }
+      if (d && d.cardFrontTheme) {
+        setFrontTheme(d.cardFrontTheme);
+      } else {
+        setFrontTheme("dark_1color_0");
       }
     });
 
@@ -49,7 +55,7 @@ function CardThemeProvider(props: Props) {
     }
     setDoc(
       doc(firestore, "users", user.uid),
-      { backTheme: newTheme },
+      { cardBackTheme: newTheme },
       { merge: true }
     );
   };
@@ -59,7 +65,7 @@ function CardThemeProvider(props: Props) {
     }
     setDoc(
       doc(firestore, "users", user.uid),
-      { frontTheme: newTheme },
+      { cardFrontTheme: newTheme },
       { merge: true }
     );
   };
