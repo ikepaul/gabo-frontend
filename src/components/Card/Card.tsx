@@ -38,7 +38,7 @@ export default function Card({
   const cardTheme = useContext(CardThemeContext);
   if (!cardTheme) {
     throw new Error(
-      "No GridItemContext.Provider found when calling useGridItemContext."
+      "No CardThemeContext.Provider found when calling useContext."
     );
   }
   let sprite_x: number, sprite_y: number, spriteSheet: string;
