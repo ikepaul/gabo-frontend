@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 import {
   GameCard,
@@ -113,7 +113,6 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       if (activeAbility == "swap-then-look") {
         socket?.emit(
           "swapThenLook",
-          gameId,
           myCardToSwap,
           theirCardToSwap,
           (receivedCard: GameCard) => {
@@ -126,24 +125,18 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
         );
         setCardsToSwap([undefined, undefined]);
       } else if (activeAbility == "look-then-swap") {
-        socket?.emit(
-          "lookThenSwap",
-          gameId,
-          myCardToSwap,
-          theirCardToSwap,
-          () => {
-            setActiveAbility("");
-            setCardsToSwap([undefined, undefined]);
-          }
-        );
+        socket?.emit("lookThenSwap", myCardToSwap, theirCardToSwap, () => {
+          setActiveAbility("");
+          setCardsToSwap([undefined, undefined]);
+        });
       }
     }
-  }, [myCardToSwap, theirCardToSwap, gameId, socket]);
+  }, [myCardToSwap, theirCardToSwap, activeAbility, socket]);
 
-  const cancelAbility = () => {
-    socket.emit("cancelAbility", gameId);
+  const cancelAbility = useCallback(() => {
+    socket.emit("cancelAbility");
     setCardToLookAt(undefined);
-  };
+  }, [socket]);
 
   useEffect(() => {
     const handleGameSetup = (newGame: GameClass) => {
@@ -434,7 +427,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
   ]);
 
   const handleCardRightClick = (card: GameCardDTO) => {
-    socket?.emit("cardFlip", gameId, card, (maxTime: number) => {
+    socket?.emit("cardFlip", card, (maxTime: number) => {
       if (user && card.ownerId !== user.uid) {
         //Flipped an opponents card
         setAvailableGives((prev) => [
@@ -456,7 +449,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     }
     if (game?.state === "Setup") {
       if (card.ownerId === user.uid) {
-        socket.emit("startPeek", gameId, card.placement, (card: GameCard) => {
+        socket.emit("startPeek", card.placement, (card: GameCard) => {
           setStartingPeeks((prev) => [...prev, { ...card }]);
         });
       }
@@ -465,27 +458,22 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
 
     if (card.ownerId === user.uid) {
       if (availableGives.length > 0) {
-        socket.emit("giveCard", gameId, card.placement);
+        socket.emit("giveCard", card.placement);
       } else if (drawnCard) {
-        socket.emit("handCardSwap", gameId, card.placement);
+        socket.emit("handCardSwap", card.placement);
       } else if (activeAbility == "look-self") {
-        socket.emit(
-          "lookSelf",
-          gameId,
-          card.placement,
-          (selectedCard: CardClass) => {
-            setActiveAbility("");
-            setCardToLookAt({
-              ...selectedCard,
-              placement: card.placement,
-              ownerId: user.uid,
-            });
+        socket.emit("lookSelf", card.placement, (selectedCard: CardClass) => {
+          setActiveAbility("");
+          setCardToLookAt({
+            ...selectedCard,
+            placement: card.placement,
+            ownerId: user.uid,
+          });
 
-            setTimeout(() => {
-              setCardToLookAt(undefined);
-            }, 1000);
-          }
-        );
+          setTimeout(() => {
+            setCardToLookAt(undefined);
+          }, 1000);
+        });
       } else if (activeAbility == "swap-then-look") {
         setCardsToSwap(([, their]) => [
           { ownerId: user.uid, placement: card.placement },
@@ -503,7 +491,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       }
     } else {
       if (activeAbility == "look-other") {
-        socket?.emit("lookOther", gameId, card, (selectedCard: CardClass) => {
+        socket?.emit("lookOther", card, (selectedCard: CardClass) => {
           setActiveAbility("");
           setCardToLookAt({
             ...selectedCard,
@@ -526,7 +514,6 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       ) {
         socket.emit(
           "lookBeforeSwap",
-          gameId,
           card.ownerId,
           card.placement,
           (shownCard: GameCard) => {
@@ -557,14 +544,13 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
   const handleTopCardClick = () => {
     if (game && game.activePlayerId === user?.uid) {
       if (drawnCard) {
-        socket.emit("putOnPile", gameId, () => {
+        socket.emit("putOnPile", () => {
           setDrawnCard(undefined);
         });
       } else {
         if (game.topCard) {
           socket.emit(
             "drawFromPile",
-            gameId,
             (pickedUpCard: CardClass, newTopCard: CardClass) => {
               setDrawnCard(pickedUpCard);
               setGame((oldGame) => {
@@ -581,7 +567,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
 
   const drawCard = () => {
     if (!drawnCard && game?.state === "Playing") {
-      socket?.emit("drawFromDeck", gameId, (card: CardClass) => {
+      socket?.emit("drawFromDeck", (card: CardClass) => {
         setDrawnCard(card);
       });
     }

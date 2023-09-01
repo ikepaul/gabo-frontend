@@ -39,7 +39,7 @@ function App() {
   }, [socket]);
 
   const leaveGame = () => {
-    socket?.emit("leaveGame", gameId, (res: string) => {
+    socket?.emit("leaveGame", (res: string) => {
       console.log(res);
       setGameId("");
       window.history.replaceState(null, "New Page Title", "/");
