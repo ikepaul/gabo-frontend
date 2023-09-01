@@ -28,6 +28,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     theirCardToSwap,
     activeAbility,
     cardToLookAt,
+    startingPeeks,
     cancelAbility,
   } = useGame(socket, gameId);
 
@@ -200,6 +201,15 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
             : player.user.uid === myCardToSwap?.ownerId
             ? myCardToSwap?.placement
             : undefined;
+        const cardsToLookAt = [
+          ...(player.user.uid === user.uid
+            ? startingPeeks.map((startingPeek) => ({
+                ...startingPeek,
+                ownerId: user.uid,
+              }))
+            : []),
+          ...(cardToLookAt?.ownerId === player.user.uid ? [cardToLookAt] : []),
+        ];
         return (
           <PlayerHand
             timers={gives.map((ag) => ({
@@ -212,11 +222,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
             handleLeftClick={(e, c) => handleCardClick(e, c)}
             handleRightClick={(e, c) => handleCardClick(e, c)}
             player={player}
-            cardToLookAt={
-              cardToLookAt?.ownerId === player.user.uid
-                ? cardToLookAt
-                : undefined
-            }
+            cardsToLookAt={cardsToLookAt}
             isActivePlayer={game.activePlayerId === player.user.uid}
             numOfCards={game.numOfCards}
             selectedCard={selectedCard}

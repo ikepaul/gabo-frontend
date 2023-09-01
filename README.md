@@ -19,15 +19,15 @@
 - User can login in with firebase and their name is displayed.
 - Card theme is stored in firebase.
 - Players are ordered the same around the "table" for all clients.
+- Being able to look at a select few of your own cards at the beginning of the game.
 
 ## Missing Features
 
-- Being able to look at a select few of your own cards at the beginning of the game.
-- UI support for more than 4 players.
-- Players should be able to choose the setup/layout of their cards.
-- Current score for players, some kind of scoresheet to keep track of total score between games.
-- Support for keyboard as input instead of mouse.
 - SAYING GABO, a.k.a. ending a game.
+- Current score for players, some kind of scoresheet to keep track of total score between games.
+- Players should be able to choose the setup/layout of their cards.
+- UI support for more than 4 players.
+- Support for keyboard as input instead of mouse.
 
 # React + TypeScript + Vite
 

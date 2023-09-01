@@ -42,6 +42,7 @@ type TUseGame = {
         ownerId: string;
       })
     | undefined;
+  startingPeeks: GameCard[];
 };
 
 type Ability = "look-self" | "look-other" | "swap-then-look" | "look-then-swap";
@@ -60,6 +61,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
   const [cardToLookAt, setCardToLookAt] = useState<
     GameCard & { ownerId: string }
   >();
+  const [startingPeeks, setStartingPeeks] = useState<GameCard[]>([]);
   const user = useContext(UserContext);
 
   useEffect(() => {
@@ -149,8 +151,18 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       setGame({ ...newGame });
       setDrawnCard(undefined);
       setCardToLookAt(undefined);
+      setStartingPeeks([]);
       setActiveAbility("");
       setAvailableGives([]);
+    };
+
+    const handleEveryoneHasLooked = () => {
+      setGame((prev) => {
+        if (prev) {
+          return { ...prev, state: "Playing" };
+        }
+        return prev;
+      });
     };
 
     const handlePlayerLeft = (
@@ -264,13 +276,14 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
             if (oldGame) {
               return { ...oldGame, players, topCard };
             }
-            return undefined;
+            return oldGame;
           });
         }
       }
     };
 
     const handleDrawFromDeck = (deckSize: number) => {
+      setStartingPeeks([]);
       setGame((oldGame) => {
         if (oldGame) {
           return { ...oldGame, deckSize };
@@ -320,7 +333,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
             if (oldGame) {
               return { ...oldGame, players };
             }
-            return undefined;
+            return oldGame;
           });
         }
       }
@@ -357,7 +370,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
         if (oldGame) {
           return { ...oldGame, players };
         }
-        return undefined;
+        return oldGame;
       });
     };
 
@@ -375,6 +388,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     };
 
     socket?.on("gameSetup", handleGameSetup);
+    socket?.on("everyoneHasLooked", handleEveryoneHasLooked);
     socket?.on("playerLeft", handlePlayerLeft);
     socket?.on("spectatorLeft", handleSpectatorLeft);
     socket?.on("playerJoined", handlePlayerJoined);
@@ -440,6 +454,15 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     if (!user) {
       return;
     }
+    if (game?.state === "Setup") {
+      if (card.ownerId === user.uid) {
+        socket.emit("startPeek", gameId, card.placement, (card: GameCard) => {
+          setStartingPeeks((prev) => [...prev, { ...card }]);
+        });
+      }
+      return;
+    }
+
     if (card.ownerId === user.uid) {
       if (availableGives.length > 0) {
         socket.emit("giveCard", gameId, card.placement);
@@ -557,7 +580,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
   };
 
   const drawCard = () => {
-    if (!drawnCard) {
+    if (!drawnCard && game?.state === "Playing") {
       socket?.emit("drawFromDeck", gameId, (card: CardClass) => {
         setDrawnCard(card);
       });
@@ -580,5 +603,6 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     theirCardToSwap,
     cardToLookAt,
     cancelAbility,
+    startingPeeks,
   };
 }

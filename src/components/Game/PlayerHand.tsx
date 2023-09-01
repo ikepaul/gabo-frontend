@@ -21,9 +21,9 @@ interface PlayerHandProps {
   isActivePlayer?: boolean;
   timers?: CardTimer[];
   selectedCard?: number;
-  cardToLookAt?: GameCard & {
+  cardsToLookAt?: (GameCard & {
     ownerId: string;
-  };
+  })[];
 }
 
 export default function PlayerHand({
@@ -38,7 +38,7 @@ export default function PlayerHand({
   isActivePlayer = false,
   timers = [],
   selectedCard = -1,
-  cardToLookAt,
+  cardsToLookAt = [],
 }: PlayerHandProps) {
   const placementStyling: SeatingStyling = {
     top: "auto",
@@ -114,11 +114,9 @@ export default function PlayerHand({
               onContextMenu={(e) => {
                 handleRightClick(e, cardOrTimer);
               }}
-              card={
-                cardToLookAt?.placement === cardOrTimer.placement
-                  ? cardToLookAt
-                  : undefined
-              }
+              card={cardsToLookAt?.find(
+                (c) => c.placement === cardOrTimer.placement
+              )}
             />
           ) : (
             <Timer

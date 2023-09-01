@@ -26,7 +26,7 @@ interface Player {
   cards: GameCardDTO[];
 }
 
-type GameState = "Waiting" | "Playing" | "Finished";
+type GameState = "Waiting" | "Setup" | "Playing" | "Finished";
 interface GameClass {
   players: Player[];
   spectators: User[];
