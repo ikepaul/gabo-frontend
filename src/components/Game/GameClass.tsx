@@ -24,6 +24,9 @@ interface InfoGive {
 interface Player {
   user: User;
   cards: GameCardDTO[];
+  numOfStartPeeks: number;
+  score: number;
+  saidGabo: boolean;
 }
 
 type GameState = "Waiting" | "Setup" | "Playing" | "Finished";

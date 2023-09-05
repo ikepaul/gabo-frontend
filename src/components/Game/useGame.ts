@@ -43,6 +43,7 @@ type TUseGame = {
       })
     | undefined;
   startingPeeks: GameCard[];
+  callGabo: () => void;
 };
 
 type Ability = "look-self" | "look-other" | "swap-then-look" | "look-then-swap";
@@ -380,6 +381,12 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       console.log(opponentPlacement);
     };
 
+    const handleGaboCalled = () => {};
+
+    const handleGameEnded = (g: GameClass) => {
+      setGame(g);
+    };
+
     socket?.on("gameSetup", handleGameSetup);
     socket?.on("everyoneHasLooked", handleEveryoneHasLooked);
     socket?.on("playerLeft", handlePlayerLeft);
@@ -397,9 +404,12 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     socket?.on("punishmentCard", handlePunishmentCard);
     socket?.on("useAbility", handleUseAbility);
     socket?.on("cardSwap", handleCardSwap);
+    socket?.on("gaboCalled", handleGaboCalled);
+    socket?.on("gameEnded", handleGameEnded);
 
     return () => {
       socket?.removeListener("gameSetup", handleGameSetup);
+      socket?.removeListener("everyoneHasLooked", handleEveryoneHasLooked);
       socket?.removeListener("playerLeft", handlePlayerLeft);
       socket?.removeListener("spectatorLeft", handleSpectatorLeft);
       socket?.removeListener("playerJoined", handlePlayerJoined);
@@ -415,6 +425,7 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       socket?.removeListener("punishmentCard", handlePunishmentCard);
       socket?.removeListener("useAbility", handleUseAbility);
       socket?.removeListener("cardSwap", handleCardSwap);
+      socket?.removeListener("gaboCalled", handleGaboCalled);
     };
   }, [
     socket,
@@ -572,8 +583,13 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       });
     }
   };
+
   const restartGame = () => {
     socket?.emit("restartGame", gameId);
+  };
+
+  const callGabo = () => {
+    socket?.emit("callGabo");
   };
 
   return {
@@ -590,5 +606,6 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
     cardToLookAt,
     cancelAbility,
     startingPeeks,
+    callGabo,
   };
 }

@@ -30,9 +30,11 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
     cardToLookAt,
     startingPeeks,
     cancelAbility,
+    callGabo,
   } = useGame(socket, gameId);
 
   const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
+  const [scoreboardIsShown, setScoreboardIsShown] = useState<boolean>(false);
   const user = useContext(UserContext);
 
   if (game === undefined || socket === undefined || user === null) {
@@ -168,6 +170,32 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         onClick={drawCard}
         deckSize={game.deckSize}
       />
+      <div
+        style={{
+          position: "absolute",
+          right: "50px",
+          zIndex: 3,
+          top: "calc(100vh - 40px - " + (scoreboardIsShown ? 100 : 0) + "px)",
+          width: "100px",
+          textAlign: "center",
+          transition: "250ms ease-in top",
+        }}
+      >
+        <button
+          style={{ height: "20px" }}
+          onClick={() => setScoreboardIsShown((prev) => !prev)}
+        >
+          {scoreboardIsShown ? "\\/" : "/\\"}
+        </button>
+        <ul style={{ listStyle: "none", background: "rgba(255,255,255,0.1)" }}>
+          {game.players.map((p) => (
+            <li>{p.user.displayName + ": " + p.score}</li>
+          ))}
+        </ul>
+      </div>
+      {game.activePlayerId == user.uid && (
+        <button onClick={callGabo}>GABO!</button>
+      )}
       {drawnCard && (
         <Card
           style={{ position: "absolute", bottom: "10vh", left: "10vw" }}

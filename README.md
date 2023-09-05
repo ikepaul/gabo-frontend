@@ -20,11 +20,15 @@
 - Card theme is stored in firebase.
 - Players are ordered the same around the "table" for all clients.
 - Being able to look at a select few of your own cards at the beginning of the game.
+- SAYING GABO, a.k.a. ending a game.
+- Current score for players, some kind of scoresheet to keep track of total score between games.
 
 ## Missing Features
 
-- SAYING GABO, a.k.a. ending a game.
-- Current score for players, some kind of scoresheet to keep track of total score between games.
+- Time window for you to say gabo before your turn gets passed over to next person.
+- Visual indicator that a player has said gabo.
+- Bugfix: Clicking on the same card twice while doing the initial peeking results in a peek being wasted on that card.
+- Text/visual indicators for what you can do. (Like visually telling what your possible actions are)
 - Players should be able to choose the setup/layout of their cards.
 - UI support for more than 4 players.
 - Support for keyboard as input instead of mouse.
