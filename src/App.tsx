@@ -3,16 +3,16 @@ import Game from "./components/Game/Game";
 import { Socket, io } from "socket.io-client";
 import SignOutBtn from "./components/Authenticate/SignOutBtn";
 import { UserContext } from "./contexts/UserContext";
+import GameInfo from "./components/Game/GameInfo";
 
 function App() {
   const user = useContext(UserContext);
   const [socket, setSocket] = useState<Socket>();
   const [gameId, setGameId] = useState<string>("");
-  const [inputGameId, setInputGameId] = useState<string>(
-    window.location.pathname.substring(1)
-  );
+  const [gameName, setGameName] = useState<string>("");
   const [numOfCards, setNumOfCards] = useState<number>(4);
   const [playerLimit, setPlayerLimit] = useState<number>(4);
+  const [gameList, setGameList] = useState<GameInfo[]>();
 
   useEffect(() => {
     user?.getIdToken().then((idToken) => {
@@ -27,6 +27,9 @@ function App() {
     }
     socket?.on("disconnect", () => {
       setGameId("");
+    });
+    socket?.emit("getGameList", (games: GameInfo[]) => {
+      setGameList(games);
     });
     return () => {
       if (socket) {
@@ -47,10 +50,16 @@ function App() {
   };
 
   const createGame = () => {
-    socket?.emit("createGame", numOfCards, playerLimit, (id: string) => {
-      setGameId(id);
-      window.history.replaceState(null, "New Page Title", "/" + id);
-    });
+    socket?.emit(
+      "createGame",
+      gameName,
+      numOfCards,
+      playerLimit,
+      (id: string) => {
+        setGameId(id);
+        window.history.replaceState(null, "New Page Title", "/" + id);
+      }
+    );
   };
 
   const joinGame = (id: string) => {
@@ -59,9 +68,15 @@ function App() {
         return;
       }
       if (status == "ok") {
-        setGameId(inputGameId);
-        window.history.replaceState(null, "New Page Title", "/" + inputGameId);
+        setGameId(id);
+        window.history.replaceState(null, "New Page Title", "/" + id);
       }
+    });
+  };
+
+  const getGameList = () => {
+    socket?.emit("getGameList", (games: GameInfo[]) => {
+      setGameList(games);
     });
   };
 
@@ -69,14 +84,37 @@ function App() {
   const minNumOfCards = 1;
   const maxPlayerLimit = 4;
   const minPlayerLimit = 1;
-
+  const materialRefresh = (
+    <span
+      style={{ verticalAlign: "middle" }}
+      className="material-symbols-outlined"
+    >
+      refresh
+    </span>
+  );
   return (
     <div>
       {gameId === "" || !socket ? (
         <div>
-          <SignOutBtn />
+          <SignOutBtn
+            style={{ position: "absolute", top: "20px", right: "10px" }}
+          />
           <div>
+            <h3>
+              List of games &nbsp;
+              <button onClick={getGameList}>{materialRefresh}</button>
+            </h3>
+            <li style={{ listStyle: "none" }}>
+              {gameList?.map((g) => (
+                <GameListItem key={g.id} joinGame={joinGame} game={g} />
+              ))}
+            </li>
             <button onClick={createGame}>Create Game</button>
+            <input
+              type="text"
+              value={gameName}
+              onChange={(e) => setGameName(e.target.value)}
+            />
             Number of cards:
             <input
               type="number"
@@ -121,21 +159,53 @@ function App() {
               id=""
             />
           </div>
-          <div>
-            <input
-              type="text"
-              value={inputGameId}
-              onChange={(e) => {
-                setInputGameId(e.target.value);
-              }}
-            />
-            <button onClick={() => joinGame(inputGameId)}>Join Game</button>
-          </div>
         </div>
       ) : (
         <Game socket={socket} leaveGame={leaveGame} gameId={gameId} />
       )}
     </div>
+  );
+}
+
+function GameListItem({
+  game,
+  joinGame,
+}: {
+  joinGame: (id: string) => void;
+  game: GameInfo;
+}) {
+  const materialCard = (
+    <span
+      style={{ verticalAlign: "middle" }}
+      className="material-symbols-outlined"
+    >
+      playing_cards
+    </span>
+  );
+  const materialPerson = (
+    <span
+      style={{ verticalAlign: "middle" }}
+      className="material-symbols-outlined"
+    >
+      person
+    </span>
+  );
+  const materialGroup = (
+    <span
+      style={{ verticalAlign: "middle" }}
+      className="material-symbols-outlined"
+    >
+      group
+    </span>
+  );
+  return (
+    <ul>
+      {game.name} &nbsp; &nbsp;
+      {game.numOfCards} {materialCard} &nbsp; &nbsp;
+      {game.playerCount + "/" + game.playerLimit} {materialPerson} &nbsp; &nbsp;
+      {game.spectatorCount} {materialGroup}{" "}
+      <button onClick={() => joinGame(game.id)}>JoinGame</button>
+    </ul>
   );
 }
 

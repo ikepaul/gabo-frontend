@@ -22,6 +22,7 @@
 - Being able to look at a select few of your own cards at the beginning of the game.
 - SAYING GABO, a.k.a. ending a game.
 - Current score for players, some kind of scoresheet to keep track of total score between games.
+- List of available games is shows, you can choose to join or create a new one.
 
 ## Missing Features
 
