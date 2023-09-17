@@ -1,6 +1,7 @@
 import { getAuth, signOut } from "firebase/auth";
 import { app } from "../../firebase/firebase";
 import { ComponentPropsWithoutRef } from "react";
+import Button from "../Reusable/Button/Button";
 
 export default function SignOutBtn({
   ...rest
@@ -12,10 +13,8 @@ export default function SignOutBtn({
     });
   };
   return (
-    <>
-      <button {...rest} onClick={handleSignOut}>
-        Sign out
-      </button>
-    </>
+    <Button {...rest} onClick={handleSignOut}>
+      Sign out
+    </Button>
   );
 }

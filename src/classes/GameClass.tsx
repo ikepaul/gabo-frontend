@@ -1,5 +1,5 @@
-import User from "../../classes/User";
-import Card from "../Card/CardClass";
+import User from "./User";
+import Card from "../components/Card/CardClass";
 
 interface GameCard extends Card {
   placement: number;

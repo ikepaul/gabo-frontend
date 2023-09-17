@@ -8,6 +8,7 @@ import { useContext, useState } from "react";
 import Settings from "../Settings/Settings";
 import { UserContext } from "../../contexts/UserContext";
 import { cycle } from "../../utils/arrays";
+import Button from "../Reusable/Button/Button";
 
 interface GameProps {
   socket: Socket;
@@ -40,20 +41,20 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
   if (game === undefined || socket === undefined || user === null) {
     return (
       <div>
-        <button
+        <Button
           onClick={() => {
             navigator.clipboard.writeText(gameId);
           }}
           style={{ position: "absolute", top: "5px", left: "5px", zIndex: 1 }}
         >
           COPY GAME ID
-        </button>
-        <button
+        </Button>
+        <Button
           style={{ position: "absolute", top: "40px", left: "5px", zIndex: 1 }}
           onClick={leaveGame}
         >
           Leave Game
-        </button>
+        </Button>
         <div>Loading...</div>
       </div>
     );
@@ -112,7 +113,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           <Settings />
         </div>
       )}
-      <button
+      <Button
         onClick={() => {
           setSettingsIsOpen((prev) => !prev);
         }}
@@ -124,7 +125,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         }}
       >
         {settingsIsOpen ? "Close settings" : "Open settings"}
-      </button>
+      </Button>
       <ul
         style={{
           position: "absolute",
@@ -142,29 +143,29 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       {activeAbility && (
         <div>
           {activeAbility}
-          <button onClick={cancelAbility}>Cancel</button>{" "}
+          <Button onClick={cancelAbility}>Cancel</Button>{" "}
         </div>
       )}
-      <button
+      <Button
         style={{ position: "absolute", top: "5px", right: "5px", zIndex: 1 }}
         onClick={restartGame}
       >
         {game.state === "Waiting" ? "Start Game" : "Restart Game"}
-      </button>
-      <button
+      </Button>
+      <Button
         onClick={() => {
           navigator.clipboard.writeText(gameId);
         }}
         style={{ position: "absolute", top: "5px", left: "5px", zIndex: 1 }}
       >
         COPY GAME ID
-      </button>
-      <button
+      </Button>
+      <Button
         style={{ position: "absolute", top: "40px", left: "5px", zIndex: 1 }}
         onClick={leaveGame}
       >
         Leave Game
-      </button>
+      </Button>
       <DeckDisplay
         style={{ position: "absolute", top: "calc(50vh - 30px)", left: "35vw" }}
         onClick={drawCard}
@@ -181,12 +182,12 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
           transition: "250ms ease-in top",
         }}
       >
-        <button
+        <Button
           style={{ height: "20px" }}
           onClick={() => setScoreboardIsShown((prev) => !prev)}
         >
           {scoreboardIsShown ? "\\/" : "/\\"}
-        </button>
+        </Button>
         <ul style={{ listStyle: "none", background: "rgba(255,255,255,0.1)" }}>
           {game.players.map((p) => (
             <li>{p.user.displayName + ": " + p.score}</li>
@@ -194,7 +195,7 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
         </ul>
       </div>
       {game.activePlayerId == user.uid && (
-        <button onClick={callGabo}>GABO!</button>
+        <Button onClick={callGabo}>GABO!</Button>
       )}
       {drawnCard && (
         <Card

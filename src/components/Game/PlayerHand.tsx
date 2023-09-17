@@ -1,5 +1,10 @@
 import Card from "../Card/Card";
-import { CardTimer, GameCard, GameCardDTO, Player } from "./GameClass";
+import {
+  CardTimer,
+  GameCard,
+  GameCardDTO,
+  Player,
+} from "../../classes/GameClass";
 import CSS from "csstype";
 
 export type Seating = "top" | "right" | "bottom" | "left";

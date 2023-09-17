@@ -7,6 +7,7 @@ import {
 } from "firebase/auth";
 import { app, firestore } from "../../firebase/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import Button from "../Reusable/Button/Button";
 
 export default function Authenticate() {
   const [emailIn, setEmailIn] = useState<string>("");
@@ -55,7 +56,7 @@ export default function Authenticate() {
         onChange={(e) => setPasswordIn(e.target.value)}
         placeholder="Password"
       />
-      <button onClick={signIn}>Sign In</button>
+      <Button onClick={signIn}>Sign In</Button>
       <br />
       <br />
       <h3>Sign Up</h3>
@@ -77,7 +78,7 @@ export default function Authenticate() {
         onChange={(e) => setPasswordUp(e.target.value)}
         placeholder="Password"
       />
-      <button onClick={signUp}>Sign Up</button>
+      <Button onClick={signUp}>Sign Up</Button>
     </div>
   );
 }

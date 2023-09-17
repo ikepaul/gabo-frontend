@@ -3,16 +3,17 @@ import Game from "./components/Game/Game";
 import { Socket, io } from "socket.io-client";
 import SignOutBtn from "./components/Authenticate/SignOutBtn";
 import { UserContext } from "./contexts/UserContext";
-import GameInfo from "./components/Game/GameInfo";
+import GameInfo from "./classes/GameInfo";
+import { getMaterial } from "./utils/icons";
+import useTheme from "./theme/useTheme";
+import Button from "./components/Reusable/Button/Button";
 
 function App() {
   const user = useContext(UserContext);
   const [socket, setSocket] = useState<Socket>();
   const [gameId, setGameId] = useState<string>("");
-  const [gameName, setGameName] = useState<string>("");
-  const [numOfCards, setNumOfCards] = useState<number>(4);
-  const [playerLimit, setPlayerLimit] = useState<number>(4);
-  const [gameList, setGameList] = useState<GameInfo[]>();
+  const [gameList, setGameList] = useState<GameInfo[]>([]);
+  const theme = useTheme();
 
   useEffect(() => {
     user?.getIdToken().then((idToken) => {
@@ -46,10 +47,15 @@ function App() {
       console.log(res);
       setGameId("");
       window.history.replaceState(null, "New Page Title", "/");
+      getGameList();
     });
   };
 
-  const createGame = () => {
+  const createGame = (
+    gameName: string,
+    numOfCards: number,
+    playerLimit: number
+  ) => {
     socket?.emit(
       "createGame",
       gameName,
@@ -80,89 +86,62 @@ function App() {
     });
   };
 
-  const maxNumOfCards = 8;
-  const minNumOfCards = 1;
-  const maxPlayerLimit = 4;
-  const minPlayerLimit = 1;
-  const materialRefresh = (
-    <span
-      style={{ verticalAlign: "middle" }}
-      className="material-symbols-outlined"
-    >
-      refresh
-    </span>
-  );
   return (
-    <div>
+    <div
+      style={{
+        textAlign: "center",
+        width: "100vw",
+        height: "100vh",
+        backgroundColor: theme.bg,
+        color: theme.text,
+      }}
+    >
       {gameId === "" || !socket ? (
-        <div>
+        <div
+          style={{
+            display: "inline-block",
+            height: "80vh",
+            width: "75vw",
+            marginTop: "10vh",
+          }}
+        >
           <SignOutBtn
             style={{ position: "absolute", top: "20px", right: "10px" }}
           />
-          <div>
-            <h3>
-              List of games &nbsp;
-              <button onClick={getGameList}>{materialRefresh}</button>
-            </h3>
-            <li style={{ listStyle: "none" }}>
-              {gameList?.map((g) => (
-                <GameListItem key={g.id} joinGame={joinGame} game={g} />
-              ))}
-            </li>
-            <button onClick={createGame}>Create Game</button>
-            <input
-              type="text"
-              value={gameName}
-              onChange={(e) => setGameName(e.target.value)}
-            />
-            Number of cards:
-            <input
-              type="number"
-              value={numOfCards}
-              min={minNumOfCards}
-              max={maxNumOfCards}
-              onChange={(e) => {
-                let val = parseInt(e.target.value);
-                if (isNaN(val)) {
-                  val = minNumOfCards;
-                }
-                if (val > maxNumOfCards) {
-                  val = maxNumOfCards;
-                }
-                if (val < minNumOfCards) {
-                  val = minNumOfCards;
-                }
-                setNumOfCards(val);
-              }}
-              id=""
-            />
-            Player limit:
-            <input
-              placeholder="Player Limit"
-              type="number"
-              value={playerLimit}
-              min={minPlayerLimit}
-              max={maxPlayerLimit}
-              onChange={(e) => {
-                let val = parseInt(e.target.value);
-                if (isNaN(val)) {
-                  val = minPlayerLimit;
-                }
-                if (val > maxPlayerLimit) {
-                  val = maxPlayerLimit;
-                }
-                if (val < minPlayerLimit) {
-                  val = minPlayerLimit;
-                }
-                setPlayerLimit(val);
-              }}
-              id=""
-            />
-          </div>
+          <GameList
+            refresh={getGameList}
+            gameList={gameList}
+            joinGame={joinGame}
+          />
+          <CreateGame createGame={createGame} />
         </div>
       ) : (
         <Game socket={socket} leaveGame={leaveGame} gameId={gameId} />
       )}
+    </div>
+  );
+}
+
+function GameList({
+  refresh,
+  gameList,
+  joinGame,
+}: {
+  refresh: () => void;
+  gameList: GameInfo[];
+  joinGame: (id: string) => void;
+}) {
+  return (
+    <div>
+      <h3>
+        List of games &nbsp;
+        <Button onClick={refresh}>{getMaterial("refresh")}</Button>
+      </h3>
+      <ul style={{ listStyle: "none" }}>
+        {gameList?.map((g) => (
+          <GameListItem key={g.id} joinGame={joinGame} game={g} />
+        ))}
+      </ul>
     </div>
   );
 }
@@ -174,38 +153,108 @@ function GameListItem({
   joinGame: (id: string) => void;
   game: GameInfo;
 }) {
-  const materialCard = (
-    <span
-      style={{ verticalAlign: "middle" }}
-      className="material-symbols-outlined"
-    >
-      playing_cards
-    </span>
-  );
-  const materialPerson = (
-    <span
-      style={{ verticalAlign: "middle" }}
-      className="material-symbols-outlined"
-    >
-      person
-    </span>
-  );
-  const materialGroup = (
-    <span
-      style={{ verticalAlign: "middle" }}
-      className="material-symbols-outlined"
-    >
-      group
-    </span>
-  );
   return (
-    <ul>
-      {game.name} &nbsp; &nbsp;
-      {game.numOfCards} {materialCard} &nbsp; &nbsp;
-      {game.playerCount + "/" + game.playerLimit} {materialPerson} &nbsp; &nbsp;
-      {game.spectatorCount} {materialGroup}{" "}
-      <button onClick={() => joinGame(game.id)}>JoinGame</button>
-    </ul>
+    <li
+      style={{
+        display: "flex",
+        width: "100%",
+        flexDirection: "row",
+        marginBottom: "10px",
+      }}
+    >
+      <div style={{ flex: "1", fontWeight: "bold", overflow: "hidden" }}>
+        {game.name}{" "}
+      </div>
+      <div style={{ flex: "1" }}>
+        {game.numOfCards} {getMaterial("playing_cards")}{" "}
+      </div>
+      <div style={{ flex: "1" }}>
+        {game.playerCount + "/" + game.playerLimit} {getMaterial("person")}{" "}
+      </div>
+      <div style={{ flex: "1" }}>
+        {game.spectatorCount} {getMaterial("group")}{" "}
+      </div>
+      <Button style={{ flex: "0" }} onClick={() => joinGame(game.id)}>
+        {getMaterial("start")}
+      </Button>
+    </li>
+  );
+}
+
+function CreateGame({
+  createGame,
+}: {
+  createGame: (
+    gameName: string,
+    numOfCards: number,
+    playerLimit: number
+  ) => void;
+}) {
+  const [gameName, setGameName] = useState<string>("");
+  const [numOfCards, setNumOfCards] = useState<number>(4);
+  const [playerLimit, setPlayerLimit] = useState<number>(4);
+  const maxNumOfCards = 8;
+  const minNumOfCards = 1;
+  const maxPlayerLimit = 4;
+  const minPlayerLimit = 1;
+
+  return (
+    <div>
+      <Button onClick={() => createGame(gameName, numOfCards, playerLimit)}>
+        Create Game
+      </Button>
+      <input
+        className="mx-10 rounded-md bg-slateWhite border-2 border-darkPurple text-darkPurple"
+        type="text"
+        value={gameName}
+        onChange={(e) => setGameName(e.target.value)}
+      />
+      Number of cards:
+      <input
+        className="mx-10 rounded-md bg-slateWhite border-2 border-darkPurple text-darkPurple"
+        type="number"
+        value={numOfCards}
+        min={minNumOfCards}
+        max={maxNumOfCards}
+        onChange={(e) => {
+          let val = parseInt(e.target.value);
+          if (isNaN(val)) {
+            val = minNumOfCards;
+          }
+          if (val > maxNumOfCards) {
+            val = maxNumOfCards;
+          }
+          if (val < minNumOfCards) {
+            val = minNumOfCards;
+          }
+          setNumOfCards(val);
+        }}
+        id=""
+      />
+      Player limit:
+      <input
+        className="mx-10 rounded-md bg-slateWhite border-2 border-darkPurple text-darkPurple"
+        placeholder="Player Limit"
+        type="number"
+        value={playerLimit}
+        min={minPlayerLimit}
+        max={maxPlayerLimit}
+        onChange={(e) => {
+          let val = parseInt(e.target.value);
+          if (isNaN(val)) {
+            val = minPlayerLimit;
+          }
+          if (val > maxPlayerLimit) {
+            val = maxPlayerLimit;
+          }
+          if (val < minPlayerLimit) {
+            val = minPlayerLimit;
+          }
+          setPlayerLimit(val);
+        }}
+        id=""
+      />
+    </div>
   );
 }
 

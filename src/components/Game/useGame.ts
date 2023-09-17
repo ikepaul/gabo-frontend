@@ -6,7 +6,7 @@ import {
   GameClass,
   InfoGive,
   Player,
-} from "./GameClass";
+} from "../../classes/GameClass";
 import CardClass from "../Card/CardClass";
 import { UserContext } from "../../contexts/UserContext";
 import User from "../../classes/User";
