@@ -35,6 +35,7 @@ export default function PlayerHand({
   player: {
     cards,
     user: { displayName },
+    saidGabo,
   },
   handleLeftClick,
   handleRightClick,
@@ -100,6 +101,7 @@ export default function PlayerHand({
         ...placementStyling,
       }}
     >
+      {saidGabo && <div className="absolute right-10">GABO!</div>}
       {isActivePlayer && <div>Playing</div>}
       <div>
         {placedCardsOrTimers.map((cardOrTimer) =>

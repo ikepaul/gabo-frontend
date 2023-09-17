@@ -6,6 +6,7 @@ interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
 export default function Button({
   colorType = "Primary",
   children,
+  className = "",
   ...rest
 }: ButtonProps) {
   const colorVariants = {
@@ -17,9 +18,9 @@ export default function Button({
 
   return (
     <button
-      {...rest}
       // className={color + " " + background}
-      className={`${colorVariants[colorType]} transition ease-in-out  duration-200 border-none rounded-md p-2 font-bold cursor-pointer inline-block hover:scale-110 hover:shadow-xl active:shadow-inner 
+      {...rest}
+      className={`${className} ${colorVariants[colorType]} transition ease-in-out  duration-200 border-none rounded-md p-2 font-bold cursor-pointer inline-block hover:scale-110 hover:shadow-xl active:shadow-inner 
       `}
     >
       {children}

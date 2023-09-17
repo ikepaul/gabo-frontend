@@ -381,7 +381,16 @@ export function useGame(socket: Socket, gameId: string): TUseGame {
       console.log(opponentPlacement);
     };
 
-    const handleGaboCalled = () => {};
+    const handleGaboCalled = (userId: string) => {
+      setGame((prev) => {
+        const newGame = structuredClone(prev);
+        const player = newGame?.players.find((p) => p.user.uid == userId);
+        if (player) {
+          player.saidGabo = true;
+        }
+        return newGame;
+      });
+    };
 
     const handleGameEnded = (g: GameClass) => {
       setGame(g);

@@ -174,28 +174,39 @@ export default function Game({ socket, gameId, leaveGame }: GameProps) {
       <div
         style={{
           position: "absolute",
-          right: "50px",
+          right: "calc(-5rem + " + (scoreboardIsShown ? 100 : 0) + "px)",
           zIndex: 3,
-          top: "calc(100vh - 40px - " + (scoreboardIsShown ? 100 : 0) + "px)",
-          width: "100px",
+          bottom: "10px",
+          width: "fit-content",
           textAlign: "center",
-          transition: "250ms ease-in top",
+          transition: "250ms ease-in right",
+          display: "flex",
+          flexDirection: "row",
+          columnGap: "10px",
         }}
       >
         <Button
-          style={{ height: "20px" }}
+          className="w-20"
           onClick={() => setScoreboardIsShown((prev) => !prev)}
         >
-          {scoreboardIsShown ? "\\/" : "/\\"}
+          {scoreboardIsShown ? "-->" : "<--"}
         </Button>
-        <ul style={{ listStyle: "none", background: "rgba(255,255,255,0.1)" }}>
+        <ul
+          style={{
+            flex: "1 1 fit-conent",
+            listStyle: "none",
+            background: "rgba(255,255,255,0.1)",
+          }}
+        >
           {game.players.map((p) => (
             <li>{p.user.displayName + ": " + p.score}</li>
           ))}
         </ul>
       </div>
       {game.activePlayerId == user.uid && (
-        <Button onClick={callGabo}>GABO!</Button>
+        <Button className="absolute right-10 bottom-20 z-10" onClick={callGabo}>
+          GABO!
+        </Button>
       )}
       {drawnCard && (
         <Card
